@@ -79,7 +79,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: parquetry-geoserver/target/site/jacoco/
+          path: |
+            parquetry/target/site/jacoco/
+            storage-web/target/site/jacoco/
 
   pr-validation-complete:
     name: PR Validation Complete

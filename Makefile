@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 .PHONY: help dev-setup format lint test verify clean compile package install geoserver-plugin geoserver-demo geoserver-demo-down geoserver-dist
 
-GEOSERVER_DIR := parquetry-geoserver
+GEOSERVER_DIR := parquetry
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "; printf "Targets:\n"} /^[a-zA-Z_-]+:.*## / {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)

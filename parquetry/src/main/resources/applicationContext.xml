@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2026 Multivers.io
+
+  This program is free software; you can redistribute it and/or modify it under
+  the terms of the GNU General Public License as published by the Free Software
+  Foundation; either version 2 of the License, or (at your option) any later
+  version.
+
+  This program is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+  FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="
+             http://www.springframework.org/schema/beans
+             http://www.springframework.org/schema/beans/spring-beans.xsd
+             http://www.springframework.org/schema/context
+             http://www.springframework.org/schema/context/spring-context.xsd">
+
+  <!--
+    The store-panel beans are defined by the @Configuration classes below, the single source of truth that GeoServer
+    Cloud imports directly. annotation-config registers the processor that runs their @Bean methods here, giving
+    vanilla GeoServer the same geoParquetDataStorePanel / icebergDataStorePanel / stacDataStorePanel beans.
+  -->
+  <context:annotation-config/>
+
+  <bean class="io.tileverse.geoserver.parquetry.config.GeoParquetConfiguration"/>
+  <bean class="io.tileverse.geoserver.parquetry.config.IcebergConfiguration"/>
+  <bean class="io.tileverse.geoserver.parquetry.config.StacConfiguration"/>
+
+  <bean id="parquetryModuleStatus" class="org.geoserver.platform.ModuleStatusImpl">
+    <property name="module" value="gs-parquetry"/>
+    <property name="name" value="Parquetry GeoParquet Plugin"/>
+    <property name="component" value="GeoParquet DataStore"/>
+    <property name="available" value="true"/>
+    <property name="enabled" value="true"/>
+    <property name="category" value="COMMUNITY"/>
+  </bean>
+</beans>
