@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.tileverse.geoserver</groupId>
+    <artifactId>tileverse-geoserver-parent</artifactId>
+    <version>${revision}</version>
+  </parent>
+
+  <artifactId>tileverse-geoserver-storage-web</artifactId>
+  <name>Tileverse GeoServer :: Storage Web</name>
+  <description>Reusable Wicket store-edit panels for DataStores that read through tileverse-storage.</description>
+
+  <licenses>
+    <license>
+      <name>GNU General Public License, version 2 or later</name>
+      <url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.html</url>
+      <distribution>repo</distribution>
+      <comments>SPDX-License-Identifier: GPL-2.0-or-later</comments>
+    </license>
+  </licenses>
+
+  <properties>
+    <!-- Must track the tileverse-storage line the consuming engines build on (parquetry currently conveys 2.0.2). -->
+    <tileverse.version>2.0.2</tileverse.version>
+    <!-- The two Wicket widgets are verbatim GPL-2.0 code copied from GeoServer; we do not lint vendored sources. -->
+    <sonar.exclusions>src/main/java/io/tileverse/geoserver/web/storage/RadioGroupParamPanel.java,src/main/java/io/tileverse/geoserver/web/storage/Select2ChoiceParamPanel.java</sonar.exclusions>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.tileverse</groupId>
+        <artifactId>tileverse-bom</artifactId>
+        <version>${tileverse.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.tileverse.storage</groupId>
+      <artifactId>tileverse-storage-core</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.geoserver</groupId>
+      <artifactId>gs-main</artifactId>
+      <version>${gs.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.geoserver.web</groupId>
+      <artifactId>gs-web-core</artifactId>
+      <version>${gs.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-select2</artifactId>
+      <version>10.9.2</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-tester</artifactId>
+      <version>10.9.1</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- WicketTester boots a mock web container; the servlet API is provided at runtime by GeoServer's container. -->
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- The provider registry the panels reflect over; the full set makes the tests see every backend. -->
+    <dependency>
+      <groupId>io.tileverse.storage</groupId>
+      <artifactId>tileverse-storage-all</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <!-- Bake the repo-root GPL LICENSE and NOTICE into the jar's META-INF. -->
+      <resource>
+        <targetPath>META-INF</targetPath>
+        <directory>${maven.multiModuleProjectDirectory}</directory>
+        <includes>
+          <include>LICENSE</include>
+          <include>NOTICE</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <configuration combine.self="override">
+          <java>
+            <palantirJavaFormat>
+              <version>2.90.0</version>
+              <formatJavadoc>true</formatJavadoc>
+            </palantirJavaFormat>
+            <licenseHeader>
+              <content>/*
+ * (c) Copyright 2026 Multiversio LLC. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ */</content>
+            </licenseHeader>
+            <removeUnusedImports/>
+            <importOrder>
+              <order>java,javax,org,com,io.tileverse.storage,io.tileverse.geoserver,io.tileverse.parquetry,</order>
+            </importOrder>
+            <excludes>
+              <exclude>src/main/java/io/tileverse/geoserver/web/storage/RadioGroupParamPanel.java</exclude>
+              <exclude>src/main/java/io/tileverse/geoserver/web/storage/Select2ChoiceParamPanel.java</exclude>
+            </excludes>
+          </java>
+          <pom>
+            <sortPom>
+              <expandEmptyElements>false</expandEmptyElements>
+            </sortPom>
+          </pom>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

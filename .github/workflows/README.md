@@ -1,6 +1,6 @@
 # GitHub Actions workflows
 
-CI and publishing for parquetry-geoserver. All builds run on **Java 25**
+CI and publishing for tileverse-geoserver. All builds run on **Java 25**
 (`temurin`). Preview features (`--enable-preview`) are enabled by the compiler
 and test plugins in the POM; `.mvn/jvm.config` adds the native-access flags
 `./mvnw` needs. GeoServer and GeoTools resolve from the OSGeo repository
@@ -41,8 +41,8 @@ Builds, tests, and publishes a release to Maven Central, then creates the GitHub
 Release. The version is fed to Maven as `-Drevision=<version>` (the POM uses
 CI-friendly `${revision}` versioning; the tag drives the published version). The
 GitHub Release also gets two attachments built at the same version: the
-GeoServer plugin zip (`parquetry-geoserver-<version>-plugin.zip`) and the
-self-contained demo zip (`parquetry-geoserver-demo-<version>.zip`).
+GeoServer plugin zip (`tileverse-geoserver-parquetry-<version>-plugin.zip`) and the
+self-contained demo zip (`tileverse-geoserver-parquetry-demo-<version>.zip`).
 
 Triggered by either:
 

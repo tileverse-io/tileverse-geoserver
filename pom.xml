@@ -2,13 +2,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>io.tileverse.parquetry.geoserver</groupId>
-  <artifactId>parquetry-geoserver-parent</artifactId>
+  <groupId>io.tileverse.geoserver</groupId>
+  <artifactId>tileverse-geoserver-parent</artifactId>
   <version>${revision}</version>
   <packaging>pom</packaging>
 
-  <name>Parquetry GeoServer :: Parent</name>
-  <description>GeoServer extensions for parquetry</description>
+  <name>Tileverse GeoServer :: Parent</name>
+  <description>GeoServer plugins for the tileverse and parquetry data formats</description>
   <url>https://tileverse.io</url>
 
   <organization>
@@ -34,19 +34,20 @@
   </developers>
 
   <modules>
-    <module>parquetry-geoserver</module>
+    <module>storage-web</module>
+    <module>parquetry</module>
   </modules>
 
   <scm>
-    <connection>scm:git:https://github.com/tileverse-io/parquetry-geoserver.git</connection>
-    <developerConnection>scm:git:git@github.com:tileverse-io/parquetry-geoserver.git</developerConnection>
+    <connection>scm:git:https://github.com/tileverse-io/tileverse-geoserver.git</connection>
+    <developerConnection>scm:git:git@github.com:tileverse-io/tileverse-geoserver.git</developerConnection>
     <tag>HEAD</tag>
-    <url>https://github.com/tileverse-io/parquetry-geoserver</url>
+    <url>https://github.com/tileverse-io/tileverse-geoserver</url>
   </scm>
 
   <issueManagement>
     <system>GitHub Issues</system>
-    <url>https://github.com/tileverse-io/parquetry-geoserver/issues</url>
+    <url>https://github.com/tileverse-io/tileverse-geoserver/issues</url>
   </issueManagement>
 
   <distributionManagement>
@@ -71,8 +72,8 @@
 
     <!-- GPG signing is off by default; the release pipeline flips it to false. -->
     <gpg.skip>true</gpg.skip>
-    <maven.compiler.source>25</maven.compiler.source>
-    <maven.compiler.target>25</maven.compiler.target>
+    <!-- Default bytecode target; modules that need a newer level override this property. -->
+    <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <spotless.version>3.5.1</spotless.version>
@@ -86,22 +87,18 @@
   </properties>
   <dependencyManagement>
     <dependencies>
-      <!-- Versions of the parquetry modules. Also conveys the tileverse-storage management (converged
-           Jackson 2, JNA, etc.) that parquetry's root POM imports from tileverse-bom. -->
+      <!-- Shared test-stack versions; keep in step with the alignment in parquetry-dependencies. -->
       <dependency>
-        <groupId>io.tileverse.parquetry</groupId>
-        <artifactId>parquetry-bom</artifactId>
-        <version>${parquetry.version}</version>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>6.1.2</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <!-- Aligns the third-party versions the plugin shares with the engine (jts-core, tools.jackson, test stack). -->
       <dependency>
-        <groupId>io.tileverse.parquetry</groupId>
-        <artifactId>parquetry-dependencies</artifactId>
-        <version>${parquetry.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>3.26.3</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -173,11 +170,8 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.15.0</version>
           <configuration>
-            <release>25</release>
+            <release>${maven.compiler.release}</release>
             <parameters>true</parameters>
-            <compilerArgs>
-              <arg>--enable-preview</arg>
-            </compilerArgs>
           </configuration>
         </plugin>
         <plugin>
@@ -192,7 +186,7 @@
           <configuration>
             <!-- @{argLine} lets jacoco:prepare-agent inject its agent when the coverage profile is active;
                  ${extraArgLine} appends ad-hoc CLI JVM args (e.g. -DextraArgLine="-Xmx2g") to the fork. -->
-            <argLine>@{argLine} --enable-preview --enable-native-access=ALL-UNNAMED ${extraArgLine}</argLine>
+            <argLine>@{argLine} --enable-native-access=ALL-UNNAMED ${extraArgLine}</argLine>
           </configuration>
         </plugin>
         <plugin>
@@ -202,7 +196,7 @@
           <configuration>
             <!-- @{argLine} lets jacoco:prepare-agent-integration inject its agent when the coverage profile is active;
                  ${extraArgLine} appends ad-hoc CLI JVM args (e.g. -DextraArgLine="-Xmx2g") to the fork. -->
-            <argLine>@{argLine} --enable-preview --enable-native-access=ALL-UNNAMED ${extraArgLine}</argLine>
+            <argLine>@{argLine} --enable-native-access=ALL-UNNAMED ${extraArgLine}</argLine>
             <!-- Aggregator modules (parent, BOMs, coverage-report) have no ITs; skip the IT phase there. -->
             <failIfNoTests>false</failIfNoTests>
             <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
@@ -267,7 +261,7 @@
               </licenseHeader>
               <removeUnusedImports/>
               <importOrder>
-                <order>java,javax,org,com,io.tileverse.storage,io.tileverse.parquetry,</order>
+                <order>java,javax,org,com,io.tileverse.storage,io.tileverse.geoserver,io.tileverse.parquetry,</order>
               </importOrder>
             </java>
             <pom>
@@ -374,11 +368,7 @@
           <!-- No external javadoc links to resolve; skip auto-detection to keep the build offline-friendly. -->
           <detectLinks>false</detectLinks>
           <detectOfflineLinks>false</detectOfflineLinks>
-          <!-- Compiles against Java 25 with preview features (see maven-compiler-plugin). -->
-          <release>25</release>
-          <additionalJOptions>
-            <additionalJOption>--enable-preview</additionalJOption>
-          </additionalJOptions>
+          <release>${maven.compiler.release}</release>
         </configuration>
         <executions>
           <execution>
@@ -396,7 +386,7 @@
         <extensions>true</extensions>
         <configuration>
           <publishingServerId>central</publishingServerId>
-          <deploymentName>Parquetry GeoServer</deploymentName>
+          <deploymentName>Tileverse GeoServer</deploymentName>
           <autoPublish>true</autoPublish>
           <waitUntil>published</waitUntil>
           <waitMaxTime>3600</waitMaxTime>
@@ -441,6 +431,104 @@
           <name>!skipDependencyConvergence</name>
         </property>
       </activation>
+      <dependencyManagement>
+        <dependencies>
+          <!-- GeoServer 3.0.0 mixes Spring 7.0.6 and 7.0.7 across its modules; the Spring BOM converges them. -->
+          <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-framework-bom</artifactId>
+            <version>7.0.7</version>
+            <type>pom</type>
+            <scope>import</scope>
+          </dependency>
+          <!-- wicketstuff-select2 pulls wicket-webjars, which drags wicket-core 10.8.0 and friends; pin the wicket
+               artifacts on GeoServer 3.0.0's 10.9.1. The wicket-bom POM is absent from the OSGeo repo; pin the
+               artifacts individually. -->
+          <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-core</artifactId>
+            <version>10.9.1</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-util</artifactId>
+            <version>10.9.1</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-request</artifactId>
+            <version>10.9.1</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-extensions</artifactId>
+            <version>10.9.1</version>
+          </dependency>
+          <!-- GeoServer/GeoTools bring two versions of commons-lang3 transitively; pin to the higher one. -->
+          <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.18.0</version>
+          </dependency>
+          <!-- GeoTools pulls javax.measure:unit-api 2.1.2 (via systems.uom) and 2.2 (via indriya); pin to 2.2. -->
+          <dependency>
+            <groupId>javax.measure</groupId>
+            <artifactId>unit-api</artifactId>
+            <version>2.2</version>
+          </dependency>
+          <!--
+            The GeoServer/GeoTools provided tree collides with parquetry's compile tree (and itself) on a handful of
+            common XML/jakarta/commons libraries. Pin each to the higher version to converge the dependency graph.
+          -->
+          <dependency>
+            <groupId>com.fasterxml.woodstox</groupId>
+            <artifactId>woodstox-core</artifactId>
+            <version>7.1.1</version>
+          </dependency>
+          <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.22.0</version>
+          </dependency>
+          <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.21.0</version>
+          </dependency>
+          <dependency>
+            <groupId>jakarta.activation</groupId>
+            <artifactId>jakarta.activation-api</artifactId>
+            <version>2.1.4</version>
+          </dependency>
+          <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>4.0.5</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+            <version>5.3.6</version>
+          </dependency>
+          <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>4.0.7</version>
+          </dependency>
+          <!-- google-cloud-storage pulls checker-qual 3.49.0; gt-jdbc-postgis 35.0 pulls 3.52.0; pin to the higher. -->
+          <dependency>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker-qual</artifactId>
+            <version>3.52.0</version>
+          </dependency>
+          <!-- spring-security 7.0.4 pulls micrometer-observation 1.16.4; spring-context 7.0.7 pulls 1.16.5; pin higher. -->
+          <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-observation</artifactId>
+            <version>1.16.5</version>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
       <build>
         <plugins>
           <plugin>
