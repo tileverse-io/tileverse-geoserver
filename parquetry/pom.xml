@@ -25,28 +25,6 @@
     <maven.compiler.release>25</maven.compiler.release>
   </properties>
 
-  <dependencyManagement>
-    <dependencies>
-      <!-- Versions of the parquetry modules. Also conveys the tileverse-storage management (converged
-           Jackson 2, JNA, etc.) that parquetry's root POM imports from tileverse-bom. -->
-      <dependency>
-        <groupId>io.tileverse.parquetry</groupId>
-        <artifactId>parquetry-bom</artifactId>
-        <version>${parquetry.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <!-- Aligns the third-party versions the plugin shares with the engine (jts-core, tools.jackson, test stack). -->
-      <dependency>
-        <groupId>io.tileverse.parquetry</groupId>
-        <artifactId>parquetry-dependencies</artifactId>
-        <version>${parquetry.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
   <dependencies>
     <dependency>
       <groupId>io.tileverse.geoserver</groupId>

@@ -21,23 +21,9 @@
   </licenses>
 
   <properties>
-    <!-- Must track the tileverse-storage line the consuming engines build on (parquetry currently conveys 2.0.2). -->
-    <tileverse.version>2.0.2</tileverse.version>
     <!-- The two Wicket widgets are verbatim GPL-2.0 code copied from GeoServer; we do not lint vendored sources. -->
     <sonar.exclusions>src/main/java/io/tileverse/geoserver/web/storage/RadioGroupParamPanel.java,src/main/java/io/tileverse/geoserver/web/storage/Select2ChoiceParamPanel.java</sonar.exclusions>
   </properties>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.tileverse</groupId>
-        <artifactId>tileverse-bom</artifactId>
-        <version>${tileverse.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
 
   <dependencies>
     <dependency>
