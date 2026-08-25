@@ -43,10 +43,11 @@
       <version>${gs.version}</version>
       <scope>provided</scope>
     </dependency>
+    <!-- The version gs-web-core ships; keep in step with gs.version. -->
     <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-select2</artifactId>
-      <version>10.9.2</version>
+      <version>10.10.0</version>
       <scope>provided</scope>
     </dependency>
 
@@ -63,7 +64,7 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-tester</artifactId>
-      <version>10.9.1</version>
+      <version>10.10.0</version>
       <scope>test</scope>
     </dependency>
     <!-- WicketTester boots a mock web container; the servlet API is provided at runtime by GeoServer's container. -->

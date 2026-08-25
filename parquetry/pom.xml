@@ -83,7 +83,7 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-tester</artifactId>
-      <version>10.9.1</version>
+      <version>10.10.0</version>
       <scope>test</scope>
     </dependency>
 

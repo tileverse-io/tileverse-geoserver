@@ -66,8 +66,9 @@
     <!-- The parquetry engine this plugin builds on; resolved from Maven Central (release) or the snapshot repo below. -->
     <parquetry.version>1.0-SNAPSHOT</parquetry.version>
 
-    <gs.version>3.0.0</gs.version>
-    <!-- Jetty used only by the test-scope embedded launcher (Start); matches GeoServer 3.0.0's Jetty. -->
+    <!-- main tracks the GeoServer development series; release branches pin the matching GeoServer release. -->
+    <gs.version>3.1.0-SNAPSHOT</gs.version>
+    <!-- Jetty used only by the test-scope embedded launcher (Start); keep in step with GeoServer's Jetty. -->
     <jetty.version>12.1.8</jetty.version>
 
     <!-- GPG signing is off by default; the release pipeline flips it to false. -->
@@ -121,7 +122,7 @@
       <name>Central Portal Snapshots</name>
       <url>https://central.sonatype.com/repository/maven-snapshots/</url>
     </repository>
-    <!-- GeoServer 3.0.0 / GeoTools 35.0 are published to the OSGeo release repo, not Maven Central. -->
+    <!-- GeoServer and GeoTools are published to the OSGeo repos, not Maven Central. -->
     <repository>
       <releases>
         <enabled>true</enabled>
@@ -439,7 +440,7 @@
       </activation>
       <dependencyManagement>
         <dependencies>
-          <!-- GeoServer 3.0.0 mixes Spring 7.0.6 and 7.0.7 across its modules; the Spring BOM converges them. -->
+          <!-- GeoServer mixes Spring patch versions across its modules; the Spring BOM converges them. -->
           <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-framework-bom</artifactId>
@@ -447,28 +448,34 @@
             <type>pom</type>
             <scope>import</scope>
           </dependency>
-          <!-- wicketstuff-select2 pulls wicket-webjars, which drags wicket-core 10.8.0 and friends; pin the wicket
-               artifacts on GeoServer 3.0.0's 10.9.1. The wicket-bom POM is absent from the OSGeo repo; pin the
+          <!-- wicketstuff-select2 pulls wicket-webjars, which drags older wicket-core and friends; pin the wicket
+               artifacts on GeoServer 3.1's 10.10.0. The wicket-bom POM is absent from the OSGeo repo; pin the
                artifacts individually. -->
           <dependency>
             <groupId>org.apache.wicket</groupId>
             <artifactId>wicket-core</artifactId>
-            <version>10.9.1</version>
+            <version>10.10.0</version>
           </dependency>
           <dependency>
             <groupId>org.apache.wicket</groupId>
             <artifactId>wicket-util</artifactId>
-            <version>10.9.1</version>
+            <version>10.10.0</version>
           </dependency>
           <dependency>
             <groupId>org.apache.wicket</groupId>
             <artifactId>wicket-request</artifactId>
-            <version>10.9.1</version>
+            <version>10.10.0</version>
           </dependency>
           <dependency>
             <groupId>org.apache.wicket</groupId>
             <artifactId>wicket-extensions</artifactId>
-            <version>10.9.1</version>
+            <version>10.10.0</version>
+          </dependency>
+          <!-- jackson-dataformat-xml pulls stax2-api 4.3.0 directly and 4.2.2 via woodstox-core; pin the higher. -->
+          <dependency>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>stax2-api</artifactId>
+            <version>4.3.0</version>
           </dependency>
           <!-- GeoServer/GeoTools bring two versions of commons-lang3 transitively; pin to the higher one. -->
           <dependency>
