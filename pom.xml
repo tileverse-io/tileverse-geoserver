@@ -62,7 +62,10 @@
   </distributionManagement>
 
   <properties>
-    <revision>1.0-SNAPSHOT</revision>
+    <!-- Series-based versioning: the version tracks the compatible GeoServer series (3.0-SNAPSHOT on the
+         branch following GeoServer 3.0, releases 3.0-1, 3.0-2, ...); gs.version stays independent because
+         the plugin may release more than once against one GeoServer series. -->
+    <revision>3.0-SNAPSHOT</revision>
     <!-- The parquetry engine this plugin builds on; resolved from Maven Central (release) or the snapshot repo below. -->
     <parquetry.version>1.0-SNAPSHOT</parquetry.version>
 

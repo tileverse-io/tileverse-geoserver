@@ -33,7 +33,8 @@ Needs no secrets.
 ## `publish-snapshot.yml`
 
 After `Pull Request Validation` completes successfully on `main` (or on manual
-dispatch), deploys the `1.0-SNAPSHOT` build to the Central snapshot repository.
+dispatch), deploys the branch's series snapshot (`3.1-SNAPSHOT` on main) to the
+Central snapshot repository.
 Skipped when the head commit message contains `[skip-publish]`.
 
 ## `publish-release.yml`
