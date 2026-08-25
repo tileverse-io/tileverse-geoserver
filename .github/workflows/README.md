@@ -9,8 +9,8 @@ and test plugins in the POM; `.mvn/jvm.config` adds the native-access flags
 
 ## `pr-validation.yml`
 
-Gates every pull request and every push to `main` (ignoring `docs/**` and
-`**.md`). Three jobs:
+Gates every pull request and every push to `main` and the release series
+branches (`3.0.x`-style names), ignoring `docs/**` and `**.md`. Three jobs:
 
 - **lint** (ubuntu): `make lint` - Spotless, SortPOM, and license-header checks.
 - **build** (ubuntu): `./mvnw verify -Pcoverage` (unit + integration tests),
@@ -27,7 +27,8 @@ binary the standard way (unzip into `WEB-INF/lib`), starts the demo stack
 (GeoServer + the s3proxy emulator) with `make geoserver-demo`, and exercises
 both workspaces over REST, WFS and WMS - including the `parquetry-s3` layers
 that read from S3 through the AWS default credential chain. Runs on every PR and
-push to `main` (ignoring `docs/**` and `**.md`). Needs no secrets.
+push to `main` and the release series branches (ignoring `docs/**` and `**.md`).
+Needs no secrets.
 
 ## `publish-snapshot.yml`
 
@@ -52,9 +53,24 @@ Triggered by either:
 - **`workflow_dispatch`** with an explicit `version` input - for releasing any
   ref or version by hand.
 
+## `backport.yml`
+
+Backport automation in the GeoServer style. Label a pull request
+`backport 3.0.x` (one label per target branch) and, once it merges, the bot
+opens the cherry-pick pull request against that branch; labeling an
+already-merged pull request works too. When the cherry-pick does not apply
+cleanly, the bot reports the failure on the original pull request and the
+backport is done by hand.
+
+Works with the default `GITHUB_TOKEN`, but pull requests it creates then do
+not trigger the validation workflows (close/reopen them to start CI). Add an
+optional `GH_TOKEN_BOT` secret (a PAT with `repo` scope) to have backport pull
+requests trigger CI like any other.
+
 ## Required repository secrets
 
-Only the two publish workflows need these:
+Only the two publish workflows need these (plus the optional `GH_TOKEN_BOT`
+above):
 
 | Secret | Purpose |
 | --- | --- |
