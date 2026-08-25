@@ -5,12 +5,12 @@ on:
   # -tileverse-storage; a change anywhere in the code can break the demo. Run on any
   # change except docs, rather than only on the geoserver/geotools modules.
   pull_request:
-    branches: [main]
+    branches: [main, '[0-9]+.[0-9]+.x']
     paths-ignore:
       - 'docs/**'
       - '**.md'
   push:
-    branches: [main]
+    branches: [main, '[0-9]+.[0-9]+.x']
     paths-ignore:
       - 'docs/**'
       - '**.md'

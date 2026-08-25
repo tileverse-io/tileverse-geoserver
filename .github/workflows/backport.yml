@@ -1,0 +1,33 @@
+name: Backport
+
+# Mirrors GeoServer's backport automation: label a pull request
+# "backport 3.0.x" (one label per target branch) and, once it merges, the bot
+# opens the cherry-pick pull request against that branch. Labeling an
+# already-merged pull request works too.
+on:
+  pull_request_target:
+    types:
+      - closed
+      - labeled
+
+permissions:
+  contents: read
+
+jobs:
+  backport:
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    runs-on: ubuntu-latest
+    name: Backport
+    steps:
+      - name: Backport Bot
+        id: backport
+        if: github.event.pull_request.merged && ( ( github.event.action == 'closed' && contains( join( github.event.pull_request.labels.*.name ), 'backport') ) || contains( github.event.label.name, 'backport' ) )
+        uses: m-kuhn/backport@v1.2.8
+        with:
+          # A bot/PAT token (GH_TOKEN_BOT) lets the created pull request trigger
+          # the validation workflows; with the default GITHUB_TOKEN fallback the
+          # backport PR is still opened but needs a close/reopen to start CI.
+          github_token: ${{ secrets.GH_TOKEN_BOT || secrets.GITHUB_TOKEN }}
