@@ -66,8 +66,8 @@
     <!-- The parquetry engine this plugin builds on; resolved from Maven Central (release) or the snapshot repo below. -->
     <parquetry.version>1.0-SNAPSHOT</parquetry.version>
 
-    <!-- main tracks the GeoServer development series; release branches pin the matching GeoServer release. -->
-    <gs.version>3.1.0-SNAPSHOT</gs.version>
+    <!-- This branch tracks the GeoServer 3.0 stable series. -->
+    <gs.version>3.0.0-SNAPSHOT</gs.version>
     <!-- Jetty used only by the test-scope embedded launcher (Start); keep in step with GeoServer's Jetty. -->
     <jetty.version>12.1.8</jetty.version>
 
@@ -449,8 +449,8 @@
             <scope>import</scope>
           </dependency>
           <!-- wicketstuff-select2 pulls wicket-webjars, which drags older wicket-core and friends; pin the wicket
-               artifacts on GeoServer 3.1's 10.10.0. The wicket-bom POM is absent from the OSGeo repo; pin the
-               artifacts individually. -->
+               artifacts on the version GeoServer ships (10.10.0). The wicket-bom POM is absent from the OSGeo repo;
+               pin the artifacts individually. -->
           <dependency>
             <groupId>org.apache.wicket</groupId>
             <artifactId>wicket-core</artifactId>
