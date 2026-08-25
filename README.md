@@ -77,14 +77,17 @@ make geoserver-demo-down   # stop and remove the container
 
 ## Coordinates
 
-Published under the `io.tileverse.geoserver` group. Current version is
-`1.0-SNAPSHOT`.
+Published under the `io.tileverse.geoserver` group. Versions track the
+compatible GeoServer series: `3.1-SNAPSHOT` is the development build for
+GeoServer 3.1, and releases number the series independently (`3.1-1`, `3.1-2`,
+...) because the plugins may release more than once against one GeoServer
+series. The `3.0.x` branch does the same for GeoServer 3.0.
 
 ```xml
 <dependency>
   <groupId>io.tileverse.geoserver</groupId>
   <artifactId>tileverse-geoserver-parquetry</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>3.1-SNAPSHOT</version>
 </dependency>
 ```
 
