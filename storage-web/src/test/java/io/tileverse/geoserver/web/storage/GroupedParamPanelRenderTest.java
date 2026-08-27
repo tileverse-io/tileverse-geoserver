@@ -21,11 +21,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * Renders a {@link GroupedParamPanel} in isolation to pin its markup and the header show/hide contract: the wrapped
- * field nests under the wrapper's own child slot, the section header shows above it only when a header model is given,
- * and no header markup is emitted otherwise.
- */
 class GroupedParamPanelRenderTest {
 
     private static final String HEADER_ID = "header";

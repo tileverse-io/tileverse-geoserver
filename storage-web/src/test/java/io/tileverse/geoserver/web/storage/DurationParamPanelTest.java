@@ -28,13 +28,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * Renders and submits a {@link DurationParamPanel} over a connection-parameters map to pin the widget contract: a
- * stored ISO-8601 string renders as an integer amount with its unit pre-selected and the unit choices labelled in plain
- * words, a submit writes the recomposed ISO-8601 string back into the map, a blank amount unsets the parameter, a
- * negative amount is rejected leaving the map untouched, and an unparseable stored value renders as a blank amount
- * without failing the page.
- */
 class DurationParamPanelTest {
 
     private static final String KEY = "storage.azure.max-retry-delay";
@@ -136,7 +129,7 @@ class DurationParamPanelTest {
         return ((DurationField) page.panel.getFormComponent()).get("unit");
     }
 
-    /** The component's path relative to the page's form, the shape {@link FormTester} addresses fields by. */
+    /** The component's path relative to the form, as expected by {@link FormTester}. */
     private static String formPath(DurationParamPanelTestPage page, Component component) {
         String formPrefix = page.form.getPageRelativePath() + ":";
         return component.getPageRelativePath().substring(formPrefix.length());

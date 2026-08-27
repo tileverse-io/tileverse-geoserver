@@ -1,17 +1,7 @@
 /*
- ----------------------------------------------------------
-
-
-This is the panel-specific .css file for the panel defined in class Select2ChoiceParamPanel
-
-The panel's html will be contained in a <div class='gs-panel-Select2ChoiceParamPanel'>
-
-Your css selectors should look like this to avoid modifying styles outside the panel:
-
-.gs-panel-Select2ChoiceParamPanel ...specific css selector... {
-      ... styling ...
+ * GeoServer 3's theme widens the single-select arrow to 2.25rem and draws it over the clear button, which
+ * Select2 places only 20px from the edge; keep the "x" clickable by moving it left of the arrow.
+ */
+.gs-panel-Select2ChoiceParamPanel .select2-container--default .select2-selection--single .select2-selection__clear {
+    margin-right: 2.25rem;
 }
-
-
- ----------------------------------------------------------
-*/
