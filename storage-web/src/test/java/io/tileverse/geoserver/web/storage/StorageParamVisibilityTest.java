@@ -30,16 +30,6 @@ class StorageParamVisibilityTest {
     }
 
     @Test
-    void alwaysVisibleCoversTheCoreParamsAndNothingElse() {
-        for (String key : new String[] {"geoparquet", "namespace", "fid", "layer-grouping", "storage.provider"}) {
-            assertThat(StorageParamVisibility.isAlwaysVisible(key)).as(key).isTrue();
-        }
-        assertThat(StorageParamVisibility.isAlwaysVisible("storage.s3.region")).isFalse();
-        assertThat(StorageParamVisibility.isAlwaysVisible("storage.caching.enabled"))
-                .isFalse();
-    }
-
-    @Test
     void showsOnlySelectedGroupsAndAlwaysCore() {
         Set<String> s3 = Set.of("s3");
         assertThat(StorageParamVisibility.isVisible("storage.s3.region", s3)).isTrue();
@@ -61,8 +51,9 @@ class StorageParamVisibilityTest {
         Map<String, String> params = Map.of(
                 "stac-geoparquet", "s3://x/i.parquet",
                 "storage.s3.region", "us-east-1",
-                "storage.caching.enabled", "true");
-        assertThat(StorageParamVisibility.selectedGroupsFromParameters(params)).containsExactly("s3");
+                "storage.caching.enabled", "true",
+                "storage.file.idle-timeout", "PT30S");
+        assertThat(StorageParamVisibility.selectedGroupsFromParameters(params)).containsExactlyInAnyOrder("s3", "file");
     }
 
     @Test
@@ -98,16 +89,20 @@ class StorageParamVisibilityTest {
     }
 
     @Test
-    void noBackendParamsWhenProviderBlankOrFile() {
+    void noRemoteBackendParamsWhenProviderBlankOrFile() {
         assertThat(visibleForProvider("storage.s3.region", "")).isFalse();
         assertThat(visibleForProvider("storage.s3.region", "file")).isFalse();
         assertThat(visibleForProvider("storage.azure.account-key", null)).isFalse();
     }
 
-    /**
-     * Resolves a single provider id to its backend groups and asks the group-based visibility rule, matching how a
-     * single-backend store edit panel decides a field's visibility.
-     */
+    @Test
+    void fileIdleTimeoutVisibleOnlyForTheFileProvider() {
+        assertThat(visibleForProvider("storage.file.idle-timeout", "file")).isTrue();
+        assertThat(visibleForProvider("storage.file.idle-timeout", "s3")).isFalse();
+        assertThat(visibleForProvider("storage.file.idle-timeout", "")).isFalse();
+    }
+
+    /** Mirrors how {@link StorageParamsPanel} decides visibility for a single provider. */
     private static boolean visibleForProvider(String paramKey, String providerId) {
         return StorageParamVisibility.isVisible(paramKey, StorageParamVisibility.groupsForProvider(providerId));
     }

@@ -1,6 +1,14 @@
-/* (c) 2025 Open Source Geospatial Foundation - all rights reserved
- * This code is licensed under the GPL 2.0 license, available at the root
- * application directory.
+/*
+ * (c) Copyright 2026 Multiversio LLC. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  */
 package io.tileverse.geoserver.web.storage;
 
@@ -13,10 +21,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Predicate;
+
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.validation.FormComponentFeedbackBorder;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 import org.geoserver.web.data.store.panel.ParamPanel;
 import org.springframework.util.StringUtils;
@@ -24,6 +36,11 @@ import org.wicketstuff.select2.ChoiceProvider;
 import org.wicketstuff.select2.Response;
 import org.wicketstuff.select2.Select2Choice;
 import org.wicketstuff.select2.StringTextChoiceProvider;
+
+// Adapted from GeoServer's pmtiles-store community module, modified by Multiversio LLC in 2026.
+// (c) 2025 Open Source Geospatial Foundation - all rights reserved
+// This code is licensed under the GPL 2.0 license, available at the root
+// application directory.
 
 /**
  * A {@link Select2Choice}-based {@link ParamPanel} that allows entering a value that's not in the list of options by
@@ -37,13 +54,13 @@ public class Select2ChoiceParamPanel<T extends Serializable> extends Panel imple
     private static final boolean isCssEmpty = IsWicketCssFileEmpty(Select2ChoiceParamPanel.class);
 
     @Override
-    public void renderHead(org.apache.wicket.markup.head.IHeaderResponse response) {
+    public void renderHead(IHeaderResponse response) {
         super.renderHead(response);
         // if the panel-specific CSS file contains actual css then have the browser load the css
         if (!isCssEmpty) {
-            response.render(org.apache.wicket.markup.head.CssHeaderItem.forReference(
-                    new org.apache.wicket.request.resource.PackageResourceReference(
-                            getClass(), getClass().getSimpleName() + ".css")));
+            PackageResourceReference reference =
+                    new PackageResourceReference(getClass(), getClass().getSimpleName() + ".css");
+            response.render(CssHeaderItem.forReference(reference));
         }
     }
 

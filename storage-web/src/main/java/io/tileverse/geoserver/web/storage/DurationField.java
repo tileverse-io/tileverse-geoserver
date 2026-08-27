@@ -25,13 +25,13 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 
 /**
- * The composite form component behind the duration widget: an integer amount plus a time-unit choice, whose single
- * value is the strict ISO-8601 duration string tileverse-storage parses (e.g. {@code PT2M}).
+ * An integer amount and a time unit composing one strict ISO-8601 duration string, the format parsed by
+ * tileverse-storage.
  */
 @SuppressWarnings("serial")
 class DurationField extends FormComponentPanel<String> {
 
-    /** The offered time units, in dropdown render order. */
+    /** The offered time units, in dropdown order. */
     static final List<ChronoUnit> UNITS =
             List.of(ChronoUnit.MILLIS, ChronoUnit.SECONDS, ChronoUnit.MINUTES, ChronoUnit.HOURS);
 
@@ -40,8 +40,9 @@ class DurationField extends FormComponentPanel<String> {
     private static final long MILLIS_PER_MINUTE = 60 * MILLIS_PER_SECOND;
     private static final long MILLIS_PER_HOUR = 60 * MILLIS_PER_MINUTE;
 
-    // The widget's transient view of the model string, kept in sync by onBeforeRender and read back by convertInput.
+    /** Backs the amount field; re-seeded with {@code unit} from the model before every render. */
     private Long amount;
+
     private ChronoUnit unit = ChronoUnit.SECONDS;
 
     private final NumberTextField<Long> amountField;
@@ -56,7 +57,6 @@ class DurationField extends FormComponentPanel<String> {
         add(amountField, unitChoice);
     }
 
-    /** Seeds the amount and unit from the model's ISO-8601 string before every render. */
     @Override
     protected void onBeforeRender() {
         Decomposed decomposed = decompose(getModelObject());
@@ -65,10 +65,7 @@ class DurationField extends FormComponentPanel<String> {
         super.onBeforeRender();
     }
 
-    /**
-     * Composes the children's inputs into this component's single converted value: a blank amount converts to
-     * {@code null}, unsetting the parameter; anything else converts to the strict ISO-8601 string.
-     */
+    /** A blank amount converts to {@code null}, unsetting the parameter. */
     @Override
     public void convertInput() {
         Long amountInput = amountField.getConvertedInput();
@@ -80,14 +77,10 @@ class DurationField extends FormComponentPanel<String> {
         setConvertedInput(compose(amountInput, unitInput != null ? unitInput : unit));
     }
 
-    /** An integer amount over one of the offered time units, the widget's view of one ISO-8601 duration string. */
+    /** A duration as shown by the widget. */
     record Decomposed(Long amount, ChronoUnit unit) {}
 
-    /**
-     * Shows a stored ISO-8601 string as an amount in the largest unit that represents it exactly as an integer. A blank
-     * or unparseable value decomposes to an empty amount over seconds; a sub-millisecond remainder truncates to
-     * milliseconds.
-     */
+    /** Uses the largest unit holding the duration as a whole number; a sub-millisecond remainder truncates. */
     static Decomposed decompose(String iso) {
         Duration duration = parseOrNull(iso);
         if (duration == null) {
@@ -97,7 +90,6 @@ class DurationField extends FormComponentPanel<String> {
         return new Decomposed(amountIn(duration, unit), unit);
     }
 
-    /** The strict ISO-8601 string for {@code amount} of {@code unit}, e.g. 2 minutes to {@code PT2M}. */
     static String compose(long amount, ChronoUnit unit) {
         return Duration.of(amount, unit).toString();
     }
