@@ -76,10 +76,11 @@ jobs:
       - name: Stage release artifacts
         run: |
           version="${{ steps.version.outputs.version }}"
-          target=parquetry/target
+          plugin_target=parquetry/target
+          demo_target=target
           mkdir -p release-artifacts
-          cp "$target/tileverse-geoserver-parquetry-$version-plugin.zip" release-artifacts/
-          cp "$target/tileverse-geoserver-parquetry-demo.zip" "release-artifacts/tileverse-geoserver-parquetry-demo-$version.zip"
+          cp "$plugin_target/tileverse-geoserver-parquetry-$version-plugin.zip" release-artifacts/
+          cp "$demo_target/tileverse-geoserver-parquetry-demo.zip" "release-artifacts/tileverse-geoserver-parquetry-demo-$version.zip"
           ls -l release-artifacts
 
       - name: Create GitHub Release

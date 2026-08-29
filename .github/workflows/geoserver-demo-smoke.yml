@@ -97,7 +97,7 @@ jobs:
 
       - name: Dump container logs on failure
         if: failure()
-        run: docker compose -f parquetry/demo/docker-compose.yml logs --no-color --tail 300
+        run: docker compose -f demo/docker-compose.yml logs --no-color --tail 300
 
       - name: Tear down
         if: always()
