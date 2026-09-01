@@ -1,6 +1,6 @@
 # Parquet-in-GeoServer demo: GeoParquet, Iceberg and STAC layers in one GeoServer.
 #
-#   docker compose up        (or: make up)
+#   docker compose up        (or: make demo-up, from the repository root)
 #   open http://localhost:8080/geoserver  (admin / geoserver)
 #
 # Six workspaces are served on first boot, each reading through the parquetry plugin:
@@ -24,12 +24,13 @@
 # and s3proxy is configured to accept those same demo keys. The bind mounts serve the data
 # directly, with no upload step.
 #
-# Build the image first with `make build` (compiles the plugin zip, then `docker compose build`).
+# Build the image first with `make demo` from the repository root (builds the plugin zips,
+# stages them into build/, then `docker compose build`).
 
 services:
   s3proxy:
     image: andrewgaul/s3proxy:latest
-    container_name: parquetry-s3proxy
+    container_name: tileverse-s3proxy
     environment:
       S3PROXY_AUTHORIZATION: aws-v2-or-v4
       S3PROXY_IDENTITY: parquetry-demo
@@ -48,7 +49,7 @@ services:
     # collection.json, and the per-item JSON. The GeoParquet assets and the stac-geoparquet
     # items table live on s3proxy, not here.
     image: nginx:alpine
-    container_name: parquetry-demo-web
+    container_name: tileverse-demo-web
     volumes:
       - ./data:/usr/share/nginx/html:ro
 
@@ -56,8 +57,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: parquetry-geoserver:demo
-    container_name: parquetry-geoserver-demo
+    image: tileverse-geoserver:demo
+    container_name: tileverse-geoserver-demo
     depends_on:
       - s3proxy
       - web

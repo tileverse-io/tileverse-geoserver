@@ -45,7 +45,7 @@ jar, and the runtime dependencies GeoServer/GeoTools do not already ship.
 
 ```bash
 # Build tileverse-geoserver-parquetry-<version>-plugin.zip under parquetry/target/
-make geoserver-plugin
+make geoserver-plugins
 
 # Equivalent direct invocation
 ./mvnw -pl :tileverse-geoserver-parquetry -am -Passembly package
@@ -68,12 +68,12 @@ A self-contained Docker demo serves six workspaces (GeoParquet, Iceberg, and STA
 each over local disk and over an S3 emulator):
 
 ```bash
-make geoserver-demo        # build the plugin, build the image, start GeoServer
+make demo-up     # build the plugins, build the image, start GeoServer
 # open http://localhost:8080/geoserver  (admin / geoserver)
-make geoserver-demo-down   # stop and remove the container
+make demo-down   # stop and remove the containers
 ```
 
-`make geoserver-dist` bundles the demo into a customer zip that needs only Docker.
+`make demo-dist` bundles the demo into a customer zip that needs only Docker.
 
 ## Coordinates
 
