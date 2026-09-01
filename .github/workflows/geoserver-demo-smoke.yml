@@ -45,15 +45,15 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Builds the plugin zip (./mvnw), builds the image (downloads GeoServer + Java 25 base),
+      # Builds the plugin zips (./mvnw), builds the image (downloads GeoServer + Java 25 base),
       # and starts GeoServer + the s3proxy emulator via docker compose.
       - name: Build and start the demo
-        run: make geoserver-demo
+        run: make demo-up
 
       - name: Wait for GeoServer to be healthy
         run: |
           for i in $(seq 1 72); do
-            status=$(docker inspect -f '{{.State.Health.Status}}' parquetry-geoserver-demo 2>/dev/null || echo starting)
+            status=$(docker inspect -f '{{.State.Health.Status}}' tileverse-geoserver-demo 2>/dev/null || echo starting)
             echo "attempt $i: health=$status"
             if [ "$status" = "healthy" ]; then exit 0; fi
             sleep 5
@@ -101,4 +101,4 @@ jobs:
 
       - name: Tear down
         if: always()
-        run: make geoserver-demo-down
+        run: make demo-down
