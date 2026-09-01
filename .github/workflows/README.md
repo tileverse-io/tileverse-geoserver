@@ -24,7 +24,7 @@ Needs no secrets.
 
 Builds the GeoServer GeoParquet plugin, installs it into an official GeoServer
 binary the standard way (unzip into `WEB-INF/lib`), starts the demo stack
-(GeoServer + the s3proxy emulator) with `make geoserver-demo`, and exercises
+(GeoServer + the s3proxy emulator) with `make demo-up`, and exercises
 both workspaces over REST, WFS and WMS - including the `parquetry-s3` layers
 that read from S3 through the AWS default credential chain. Runs on every PR and
 push to `main` and the release series branches (ignoring `docs/**` and `**.md`).
@@ -44,7 +44,7 @@ Release. The version is fed to Maven as `-Drevision=<version>` (the POM uses
 CI-friendly `${revision}` versioning; the tag drives the published version). The
 GitHub Release also gets two attachments built at the same version: the
 GeoServer plugin zip (`tileverse-geoserver-parquetry-<version>-plugin.zip`) and the
-self-contained demo zip (`tileverse-geoserver-parquetry-demo-<version>.zip`).
+self-contained demo zip (`tileverse-geoserver-demo-<version>.zip`).
 
 Triggered by either:
 
