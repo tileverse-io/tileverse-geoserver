@@ -1,10 +1,11 @@
 .DEFAULT_GOAL := help
-.PHONY: help dev-setup format lint test verify clean compile package install geoserver-plugin geoserver-demo geoserver-demo-down geoserver-dist demo-image demo-up demo-logs demo-clean
+# demo must stay .PHONY: the demo/ directory would otherwise satisfy the target as "up to date".
+.PHONY: help dev-setup format lint test verify clean compile package install geoserver-plugins demo-plugins demo demo-up demo-down demo-logs demo-dist demo-clean
 
-# The GeoServer + GeoParquet demo (see demo/README.md).
+# The GeoServer plugin-family demo (see demo/README.md).
 DEMO := demo
 COMPOSE := docker compose -f $(DEMO)/docker-compose.yml
-DIST := target/tileverse-geoserver-parquetry-demo
+DIST := target/tileverse-geoserver-demo
 URL := http://localhost:8080/geoserver
 # Extra flags forwarded to the plugin Maven build, e.g. MVN_FLAGS=-Drevision=1.0.0 for a release
 # (the POM uses CI-friendly ${revision} versioning; the release tag drives the version).
@@ -40,25 +41,34 @@ package: ## Package all modules (skip tests)
 install: ## Build and install all modules to the local repo
 	./mvnw install
 
-# GeoServer plugin and its demo. geoserver-plugin builds the plugin zip directly in one reactor
-# pass and drops a copy into demo/build; the demo-* targets build that same zip, drop it into a
-# Docker image that unzips it into GeoServer's WEB-INF/lib (see demo/Dockerfile), and drive it
-# with docker compose.
-geoserver-plugin: ## Build the GeoServer plugin zip (drop into any GeoServer install)
+# The GeoServer plugins and their demo. geoserver-plugins builds every plugin zip in one reactor
+# pass. The demo targets stage those zips into demo/build, bake them into a Docker image that
+# unzips them into GeoServer's WEB-INF/lib (see demo/Dockerfile), and drive it with docker compose.
+geoserver-plugins: ## Build the GeoServer plugin zips (drop into any GeoServer install)
 	./mvnw -ntp $(MVN_FLAGS) -pl :tileverse-geoserver-parquetry -am -Passembly package -Dmaven.test.skip=true
+
+# Stage the plugin zips into demo/build, where the demo Dockerfile picks them up.
+demo-plugins: geoserver-plugins
 	mkdir -p $(DEMO)/build
 	cp parquetry/target/tileverse-geoserver-parquetry-*-plugin.zip $(DEMO)/build/plugin.zip
 
-geoserver-demo: demo-image demo-up ## Build and start the GeoServer + GeoParquet demo
+demo: demo-plugins ## Build the demo Docker image
+	$(COMPOSE) build
+
+demo-up: demo ## Build and start the GeoServer demo
+	$(COMPOSE) up -d
 	@echo ""
 	@echo "GeoServer is starting at $(URL)  (admin / geoserver)"
 	@echo "Layer preview: $(URL)/web  ->  Layer Preview  ->  parquetry:world"
 	@echo "Follow startup with: make demo-logs"
 
-geoserver-demo-down: ## Stop and remove the GeoServer demo container
+demo-down: ## Stop and remove the demo containers
 	$(COMPOSE) down
 
-geoserver-dist: geoserver-plugin ## Build the plugin and the self-contained customer demo zip
+demo-logs: ## Follow the demo container logs
+	$(COMPOSE) logs -f
+
+demo-dist: demo-plugins ## Build the self-contained customer demo zip
 	rm -rf $(DIST) $(DIST).zip
 	mkdir -p $(DIST)/build $(DIST)/data
 	cp $(DEMO)/Dockerfile $(DEMO)/.dockerignore $(DEMO)/docker-compose.yml $(DIST)/
@@ -70,18 +80,9 @@ geoserver-dist: geoserver-plugin ## Build the plugin and the self-contained cust
 	cp -r $(DEMO)/data/stac $(DIST)/data/stac
 	cp $(DEMO)/data/catalog.json $(DIST)/data/
 	cp -r $(DEMO)/secrets $(DIST)/secrets
-	cd target && zip -rq tileverse-geoserver-parquetry-demo.zip tileverse-geoserver-parquetry-demo
+	cd target && zip -rq $(notdir $(DIST)).zip $(notdir $(DIST))
 	@echo "distributable: $(CURDIR)/$(DIST).zip"
 
-demo-image: geoserver-plugin ## Build the demo Docker image
-	$(COMPOSE) build
-
-demo-up: ## Start the demo container
-	$(COMPOSE) up -d
-
-demo-logs: ## Follow the demo container logs
-	$(COMPOSE) logs -f
-
-demo-clean: geoserver-demo-down ## Remove demo build artifacts and the demo image
-	rm -rf $(DEMO)/build target/parquetry-geoserver-demo target/parquetry-geoserver-demo.zip
-	docker image rm parquetry-geoserver:demo 2>/dev/null || true
+demo-clean: demo-down ## Remove demo build artifacts and the demo image
+	rm -rf $(DEMO)/build $(DIST) $(DIST).zip
+	docker image rm tileverse-geoserver:demo 2>/dev/null || true

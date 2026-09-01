@@ -39,7 +39,7 @@ Each appears in two workspaces, plus a `world` layer group ("World Map") in each
 The `Makefile` is one level up, at the repository root. From there:
 
 ```bash
-make geoserver-demo
+make demo-up
 ```
 
 That builds the plugin zip, builds the image, and starts GeoServer. Then open:
@@ -47,16 +47,16 @@ That builds the plugin zip, builds the image, and starts GeoServer. Then open:
 - Web admin: <http://localhost:8080/geoserver>  (user `admin`, password `geoserver`)
 - Layer preview: Web admin -> Layer Preview -> `parquetry:world`
 
-Stop it with `make geoserver-demo-down`. Follow startup logs with `make demo-logs`. If the image is
+Stop it with `make demo-down`. Follow startup logs with `make demo-logs`. If the image is
 already built, `docker compose up` from this directory is enough.
 
 ## Build a customer zip
 
 ```bash
-make geoserver-dist
+make demo-dist
 ```
 
-produces `target/tileverse-geoserver-parquetry-demo.zip`: a self-contained bundle (Dockerfile, the prebuilt
+produces `target/tileverse-geoserver-demo.zip`: a self-contained bundle (Dockerfile, the prebuilt
 plugin zip, the preconfigured data directory and the data, and a compose file). The recipient
 needs only Docker - they unzip it and run `docker compose up`, with no checkout of this
 repository and no image registry. The first `up` builds the image locally.
@@ -88,9 +88,9 @@ own data, drop GeoParquet files in `data/ne/` and adjust the `ne` datastore unde
 
 ## How it is built
 
-- `make geoserver-plugin` runs `./mvnw -pl :tileverse-geoserver-parquetry -Passembly package`, producing the
+- `make geoserver-plugins` runs `./mvnw -pl :tileverse-geoserver-parquetry -Passembly package`, producing the
   standard GeoServer-plugin zip (the plugin jar plus its runtime dependencies; libraries GeoServer
-  already ships are excluded). The zip is copied to `build/plugin.zip`.
+  already ships are excluded). The demo targets stage a copy at `build/plugin.zip`.
 - The `Dockerfile` downloads the official GeoServer 3.0 platform-independent binary, drops the old
   bundled Marlin renderer (incompatible with JDK 24+), unzips the plugin into `WEB-INF/lib`, and
   bakes in the preconfigured `parquetry` workspace and the GeoParquet data.

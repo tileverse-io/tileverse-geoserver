@@ -71,7 +71,7 @@ jobs:
       # The GeoServer plugin zip (drop into any GeoServer install) and the self-contained demo zip
       # are attached to the GitHub Release, not Maven Central.
       - name: Build the GeoServer plugin and demo zips
-        run: make geoserver-dist MVN_FLAGS="-Drevision=${{ steps.version.outputs.version }}"
+        run: make demo-dist MVN_FLAGS="-Drevision=${{ steps.version.outputs.version }}"
 
       - name: Stage release artifacts
         run: |
@@ -80,7 +80,7 @@ jobs:
           demo_target=target
           mkdir -p release-artifacts
           cp "$plugin_target/tileverse-geoserver-parquetry-$version-plugin.zip" release-artifacts/
-          cp "$demo_target/tileverse-geoserver-parquetry-demo.zip" "release-artifacts/tileverse-geoserver-parquetry-demo-$version.zip"
+          cp "$demo_target/tileverse-geoserver-demo.zip" "release-artifacts/tileverse-geoserver-demo-$version.zip"
           ls -l release-artifacts
 
       - name: Create GitHub Release
