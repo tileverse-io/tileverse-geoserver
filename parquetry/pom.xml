@@ -35,6 +35,10 @@
       <groupId>io.tileverse.parquetry</groupId>
       <artifactId>parquetry-geotools</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.tileverse.parquetry</groupId>
+      <artifactId>parquetry-arrow</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.geoserver</groupId>
@@ -51,6 +55,13 @@
     <dependency>
       <groupId>org.geoserver.web</groupId>
       <artifactId>gs-web-core</artifactId>
+      <version>${gs.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- GeoServer supplies the WFS service at runtime; the output formats register against its Response contract. -->
+    <dependency>
+      <groupId>org.geoserver</groupId>
+      <artifactId>gs-wfs-core</artifactId>
       <version>${gs.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -84,6 +95,96 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-tester</artifactId>
       <version>10.10.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- The WFS 1.x service that dispatches harness GetFeature requests. -->
+    <dependency>
+      <groupId>org.geoserver</groupId>
+      <artifactId>gs-wfs1_x</artifactId>
+      <version>${gs.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- WFS test-support harness classes (WFSTestSupport, WFS1XTestSupport, GeoServerSystemTestSupport). -->
+    <dependency>
+      <groupId>org.geoserver</groupId>
+      <artifactId>gs-main</artifactId>
+      <version>${gs.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.geoserver</groupId>
+      <artifactId>gs-wfs-core</artifactId>
+      <version>${gs.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.geoserver</groupId>
+      <artifactId>gs-wfs1_x</artifactId>
+      <version>${gs.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <!-- The GeoServer test harness is JUnit 4. -->
+    <dependency>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!--
+      MockHttpServletResponse, returned by GeoServerSystemTestSupport#getAsServletResponse. Version pinned to match
+      the spring-framework-bom import in the dependencyConvergence profile (root POM); the flatten plugin cannot
+      resolve a profile-scoped managed version, and the version must be explicit here.
+    -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <version>7.0.7</version>
+      <scope>test</scope>
+    </dependency>
+    <!--
+      GeoServerSystemTestSupport and its ancestors reach into these three libraries (XML comparison, HTML assertions,
+      polling assertions); none flow transitively through the gs-main-tests jar. Without them on the classpath, JUnit
+      vintage's reflective method discovery throws NoClassDefFoundError on the harness base classes. Versions match
+      the pins in GeoServer's own parent POM (which every GeoServer module inherits these from directly; this plugin
+      does not).
+    -->
+    <dependency>
+      <groupId>xmlunit</groupId>
+      <artifactId>xmlunit</artifactId>
+      <version>1.6</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>1.23.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <version>4.3.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Used by GeoServerSystemTestSupport. -->
+    <dependency>
+      <groupId>org.apache.httpcomponents.client5</groupId>
+      <artifactId>httpclient5</artifactId>
+      <version>5.4.4</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Read Arrow IPC responses back in output-format tests. -->
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-vector</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.arrow</groupId>
+      <artifactId>arrow-memory-unsafe</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -154,7 +255,11 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
         <configuration>
-          <argLine>@{argLine} --enable-preview --enable-native-access=ALL-UNNAMED ${extraArgLine}</argLine>
+          <!-- The Arrow IPC output format ITs read the response back with arrow-memory-unsafe, which reaches into
+               java.nio via sun.misc.Unsafe; JDK 25 locks that down by default. Open it for the test JVM only. -->
+          <argLine>@{argLine} --enable-preview --enable-native-access=ALL-UNNAMED
+            --add-opens=java.base/java.nio=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow
+            ${extraArgLine}</argLine>
         </configuration>
       </plugin>
       <plugin>
