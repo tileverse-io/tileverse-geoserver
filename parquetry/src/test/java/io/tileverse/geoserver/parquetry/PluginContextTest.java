@@ -14,6 +14,7 @@ package io.tileverse.geoserver.parquetry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.geoserver.config.impl.GeoServerImpl;
 import org.geoserver.platform.ModuleStatus;
 import org.geoserver.platform.ModuleStatusImpl;
 import org.geoserver.web.data.resource.DataStorePanelInfo;
@@ -21,9 +22,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.StaticApplicationContext;
 
 import io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel;
 import io.tileverse.geoserver.parquetry.web.StacDataStoreEditPanel;
+import io.tileverse.geoserver.parquetry.wfs.ArrowIpcOutputFormat;
+import io.tileverse.geoserver.parquetry.wfs.GeoParquetOutputFormat;
 
 import io.tileverse.parquetry.geotools.iceberg.IcebergDataStoreFactory;
 import io.tileverse.parquetry.geotools.parquet.GeoParquetDataStoreFactory;
@@ -31,7 +35,9 @@ import io.tileverse.parquetry.geotools.parquet.StacDataStoreFactory;
 
 /**
  * Loads the plugin's {@code applicationContext.xml} the same way GeoServer does (Spring bean definitions at the jar
- * root) and asserts the store-panel and module-status beans are wired to the GeoParquet, Iceberg, and STAC factories.
+ * root) and asserts the store-panel, module-status, and WFS output format beans are wired to their factories and
+ * formats. A parent context supplies the {@code geoServer} singleton the output format beans depend on, the same way
+ * GeoServer's own application context does at runtime.
  */
 class PluginContextTest {
 
@@ -39,7 +45,10 @@ class PluginContextTest {
 
     @BeforeEach
     void loadContext() {
-        context = new ClassPathXmlApplicationContext("applicationContext.xml");
+        StaticApplicationContext parent = new StaticApplicationContext();
+        parent.registerSingleton("geoServer", GeoServerImpl.class);
+        parent.refresh();
+        context = new ClassPathXmlApplicationContext(new String[] {"applicationContext.xml"}, parent);
     }
 
     @AfterEach
@@ -91,5 +100,11 @@ class PluginContextTest {
 
         assertThat(factory.getDisplayName()).isEqualTo("Parquet");
         assertThat(factory.isAvailable()).isTrue();
+    }
+
+    @Test
+    void wfsOutputFormatBeansAreDefined() {
+        assertThat(context.getBean("geoParquetOutputFormat")).isInstanceOf(GeoParquetOutputFormat.class);
+        assertThat(context.getBean("arrowIpcOutputFormat")).isInstanceOf(ArrowIpcOutputFormat.class);
     }
 }

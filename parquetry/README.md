@@ -23,6 +23,42 @@ rest. The AWS region is a searchable Select2 dropdown, and secret fields (keys,
 tokens, passwords) are masked. The provider is auto-detected from the URI when
 left unset. Local files need no provider selection.
 
+## WFS output formats
+
+The plugin adds two WFS `GetFeature` output formats, listed under
+`<outputFormat>` in the WFS 1.0, 1.1, and 2.0 capabilities documents:
+
+| Format     | `outputFormat` value | MIME type alias                       | Attachment extension |
+|------------|-----------------------|----------------------------------------|-----------------------|
+| GeoParquet | `geoparquet`          | `application/vnd.apache.parquet`       | `.parquet`             |
+| Arrow IPC  | `arrow-ipc`           | `application/vnd.apache.arrow.stream`  | `.arrows`              |
+
+Either the format name or the MIME type works as `outputFormat`. The response
+is attached as `<layer>.<extension>` (the requested type name); a `FILENAME`
+format_option, honored by GeoServer's base `GetFeature` output format,
+overrides the attachment name.
+
+Both formats serve a single query per request. A `GetFeature` request naming
+more than one `typeName`, or one whose result holds complex features, fails
+with a WFS exception instead of a partial response.
+
+GeoParquet reads three write knobs from `format_options`, matched
+case-insensitively; any knob left unset keeps the write engine's default.
+
+| Option          | Values                                          |
+|------------------|--------------------------------------------------|
+| `parquetVersion` | `1.1`, `2.0`                                      |
+| `rowGroupSize`   | a positive row count                              |
+| `compression`    | `zstd`, `snappy`, `gzip`, `lz4`, `none`           |
+
+Arrow IPC takes no `format_options`; its output comes entirely from the
+engine's fixed defaults.
+
+```bash
+curl -s "http://localhost:8080/geoserver/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=topp:states&outputFormat=geoparquet" -o states.parquet
+curl -s "http://localhost:8080/geoserver/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=topp:states&outputFormat=arrow-ipc&count=1000" -o states.arrows
+```
+
 ## Runtime requirement
 
 `parquetry-core` is Java 25 bytecode compiled with `--enable-preview`. The
