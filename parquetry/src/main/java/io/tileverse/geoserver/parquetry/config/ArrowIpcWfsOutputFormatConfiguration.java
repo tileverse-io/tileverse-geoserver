@@ -13,6 +13,7 @@
 package io.tileverse.geoserver.parquetry.config;
 
 import org.geoserver.config.GeoServer;
+import org.geoserver.platform.ModuleStatusImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,5 +33,11 @@ public class ArrowIpcWfsOutputFormatConfiguration {
     @Bean
     ArrowIpcOutputFormat arrowIpcOutputFormat(GeoServer geoServer) {
         return new ArrowIpcOutputFormat(geoServer);
+    }
+
+    @Bean
+    ModuleStatusImpl arrowIpcWfsOutputFormatModuleStatus() {
+        return ModuleStatuses.community(
+                "gs-parquetry-wfs-arrow-ipc", "Parquetry Arrow IPC WFS Output Format", "WFS GetFeature output format");
     }
 }

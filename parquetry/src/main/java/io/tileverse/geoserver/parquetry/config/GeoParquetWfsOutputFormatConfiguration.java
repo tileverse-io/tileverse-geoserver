@@ -13,6 +13,7 @@
 package io.tileverse.geoserver.parquetry.config;
 
 import org.geoserver.config.GeoServer;
+import org.geoserver.platform.ModuleStatusImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,5 +33,13 @@ public class GeoParquetWfsOutputFormatConfiguration {
     @Bean
     GeoParquetOutputFormat geoParquetOutputFormat(GeoServer geoServer) {
         return new GeoParquetOutputFormat(geoServer);
+    }
+
+    @Bean
+    ModuleStatusImpl geoParquetWfsOutputFormatModuleStatus() {
+        return ModuleStatuses.community(
+                "gs-parquetry-wfs-geoparquet",
+                "Parquetry GeoParquet WFS Output Format",
+                "WFS GetFeature output format");
     }
 }

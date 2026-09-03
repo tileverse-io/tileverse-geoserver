@@ -21,9 +21,9 @@
              http://www.springframework.org/schema/context/spring-context.xsd">
 
   <!--
-    The store-panel and WFS output format beans are defined by the @Configuration classes below, the single source
-    of truth that GeoServer Cloud imports directly. annotation-config registers the processor that runs their @Bean
-    methods here, giving vanilla GeoServer the same beans.
+    The store-panel, WFS output format, and module-status beans are defined by the @Configuration classes below,
+    the single source of truth that GeoServer Cloud imports directly. annotation-config registers the processor
+    that runs their @Bean methods here, giving vanilla GeoServer the same beans.
   -->
   <context:annotation-config/>
 
@@ -32,13 +32,4 @@
   <bean class="io.tileverse.geoserver.parquetry.config.StacConfiguration"/>
   <bean class="io.tileverse.geoserver.parquetry.config.GeoParquetWfsOutputFormatConfiguration"/>
   <bean class="io.tileverse.geoserver.parquetry.config.ArrowIpcWfsOutputFormatConfiguration"/>
-
-  <bean id="parquetryModuleStatus" class="org.geoserver.platform.ModuleStatusImpl">
-    <property name="module" value="gs-parquetry"/>
-    <property name="name" value="Parquetry GeoParquet Plugin"/>
-    <property name="component" value="GeoParquet DataStore"/>
-    <property name="available" value="true"/>
-    <property name="enabled" value="true"/>
-    <property name="category" value="COMMUNITY"/>
-  </bean>
 </beans>

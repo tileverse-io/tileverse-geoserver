@@ -12,6 +12,7 @@
  */
 package io.tileverse.geoserver.parquetry.config;
 
+import org.geoserver.platform.ModuleStatusImpl;
 import org.geoserver.web.data.resource.DataStorePanelInfo;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,5 +39,10 @@ public class StacConfiguration {
                 StacDataStoreFactory.class,
                 StacDataStoreEditPanel.class,
                 "img/icons/stac-geoparquet.svg");
+    }
+
+    @Bean
+    ModuleStatusImpl stacModuleStatus() {
+        return ModuleStatuses.community("gs-parquetry-stac", "Parquetry STAC Store", "STAC DataStore");
     }
 }

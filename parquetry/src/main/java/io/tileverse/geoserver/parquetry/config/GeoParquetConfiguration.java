@@ -12,6 +12,7 @@
  */
 package io.tileverse.geoserver.parquetry.config;
 
+import org.geoserver.platform.ModuleStatusImpl;
 import org.geoserver.web.data.resource.DataStorePanelInfo;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,5 +39,11 @@ public class GeoParquetConfiguration {
                 GeoParquetDataStoreFactory.class,
                 GeoParquetDataStoreEditPanel.class,
                 "img/icons/parquetry.svg");
+    }
+
+    @Bean
+    ModuleStatusImpl geoParquetModuleStatus() {
+        return ModuleStatuses.community(
+                "gs-parquetry-geoparquet", "Parquetry GeoParquet Store", "GeoParquet DataStore");
     }
 }
