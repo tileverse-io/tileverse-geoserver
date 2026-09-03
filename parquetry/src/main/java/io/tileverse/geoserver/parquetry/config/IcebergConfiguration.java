@@ -12,6 +12,7 @@
  */
 package io.tileverse.geoserver.parquetry.config;
 
+import org.geoserver.platform.ModuleStatusImpl;
 import org.geoserver.web.data.resource.DataStorePanelInfo;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,5 +39,10 @@ public class IcebergConfiguration {
                 IcebergDataStoreFactory.class,
                 GeoParquetDataStoreEditPanel.class,
                 "img/icons/apache-iceberg.svg");
+    }
+
+    @Bean
+    ModuleStatusImpl icebergModuleStatus() {
+        return ModuleStatuses.community("gs-parquetry-iceberg", "Parquetry Iceberg Store", "Iceberg DataStore");
     }
 }
