@@ -14,6 +14,8 @@ package io.tileverse.geoserver.parquetry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.stream.Stream;
+
 import org.geoserver.config.impl.GeoServerImpl;
 import org.geoserver.platform.ModuleStatus;
 import org.geoserver.platform.ModuleStatusImpl;
@@ -21,6 +23,9 @@ import org.geoserver.web.data.resource.DataStorePanelInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 
@@ -85,13 +90,31 @@ class PluginContextTest {
         assertThat(panel.getIcon()).isEqualTo("img/icons/stac-geoparquet.svg");
     }
 
-    @Test
-    void moduleStatusReportsTheCommunityPlugin() {
-        ModuleStatusImpl status = context.getBean("parquetryModuleStatus", ModuleStatusImpl.class);
+    @ParameterizedTest
+    @MethodSource("featureModuleStatuses")
+    void eachFeatureConfigurationReportsItsOwnModuleStatus(String beanName, String module, String component) {
+        ModuleStatusImpl status = context.getBean(beanName, ModuleStatusImpl.class);
 
-        assertThat(status.getModule()).isEqualTo("gs-parquetry");
+        assertThat(status.getModule()).isEqualTo(module);
+        assertThat(status.getComponent()).contains(component);
         assertThat(status.isAvailable()).isTrue();
+        assertThat(status.isEnabled()).isTrue();
         assertThat(status.getCategory()).isEqualTo(ModuleStatus.Category.COMMUNITY);
+    }
+
+    static Stream<Arguments> featureModuleStatuses() {
+        return Stream.of(
+                Arguments.of("geoParquetModuleStatus", "gs-parquetry-geoparquet", "GeoParquet DataStore"),
+                Arguments.of("icebergModuleStatus", "gs-parquetry-iceberg", "Iceberg DataStore"),
+                Arguments.of("stacModuleStatus", "gs-parquetry-stac", "STAC DataStore"),
+                Arguments.of(
+                        "geoParquetWfsOutputFormatModuleStatus",
+                        "gs-parquetry-wfs-geoparquet",
+                        "WFS GetFeature output format"),
+                Arguments.of(
+                        "arrowIpcWfsOutputFormatModuleStatus",
+                        "gs-parquetry-wfs-arrow-ipc",
+                        "WFS GetFeature output format"));
     }
 
     @Test
