@@ -10,8 +10,8 @@ custom store-edit panel. The `applicationContext.xml` here declares:
 
 - a `DataStorePanelInfo` binding `GeoParquetDataStoreFactory` to the custom
   `GeoParquetDataStoreEditPanel` (see below), and
-- a `ModuleStatusImpl` so the plugin appears under About > Server Status >
-  Modules.
+- a `ModuleStatusImpl` per feature: each store type and each WFS output format
+  reports its own row under About > Server Status > Modules.
 
 ## Cloud storage panel
 
