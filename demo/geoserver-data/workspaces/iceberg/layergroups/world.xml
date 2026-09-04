@@ -24,8 +24,12 @@
     </published>
   </publishables>
   <styles>
-    <style/>
-    <style/>
+    <style>
+      <id>StyleInfoImpl-iceberg-countries</id>
+    </style>
+    <style>
+      <id>StyleInfoImpl-iceberg-disputed</id>
+    </style>
     <style/>
     <style/>
     <style/>

@@ -24,8 +24,12 @@
     </published>
   </publishables>
   <styles>
-    <style/>
-    <style/>
+    <style>
+      <id>StyleInfoImpl-parquetry-s3-countries</id>
+    </style>
+    <style>
+      <id>StyleInfoImpl-parquetry-s3-disputed</id>
+    </style>
     <style/>
     <style/>
     <style/>
