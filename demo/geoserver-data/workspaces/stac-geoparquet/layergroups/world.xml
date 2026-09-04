@@ -24,8 +24,12 @@
     </published>
   </publishables>
   <styles>
-    <style/>
-    <style/>
+    <style>
+      <id>StyleInfoImpl-stac-geoparquet-countries</id>
+    </style>
+    <style>
+      <id>StyleInfoImpl-stac-geoparquet-disputed</id>
+    </style>
     <style/>
     <style/>
     <style/>

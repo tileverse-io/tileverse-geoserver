@@ -24,8 +24,12 @@
     </published>
   </publishables>
   <styles>
-    <style/>
-    <style/>
+    <style>
+      <id>StyleInfoImpl-stac-json-countries</id>
+    </style>
+    <style>
+      <id>StyleInfoImpl-stac-json-disputed</id>
+    </style>
     <style/>
     <style/>
     <style/>
