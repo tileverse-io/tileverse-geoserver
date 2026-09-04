@@ -1,0 +1,13 @@
+<style>
+  <id>StyleInfoImpl-iceberg-s3-populated_places</id>
+  <name>populated_places</name>
+  <workspace>
+    <id>WorkspaceInfoImpl--1b718b8f:19f311dfce5:-7fe1</id>
+  </workspace>
+  <format>sld</format>
+  <languageVersion>
+    <version>1.0.0</version>
+  </languageVersion>
+  <filename>populated_places.sld</filename>
+  <dateCreated>2026-09-04 00:00:00.000 UTC</dateCreated>
+</style>
