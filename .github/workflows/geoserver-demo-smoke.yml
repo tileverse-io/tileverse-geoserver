@@ -45,6 +45,21 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      # Reads the GeoParquet and Arrow IPC responses back in the output-format smoke checks.
+      - name: Set up DuckDB
+        run: |
+          curl -fsSL --retry 3 --retry-all-errors -o /tmp/duckdb.zip \
+            "https://github.com/duckdb/duckdb/releases/download/${DUCKDB_VERSION}/duckdb_cli-linux-amd64.zip"
+          sudo unzip -q -o /tmp/duckdb.zip -d /usr/local/bin
+          duckdb --version
+          # read_arrow ships in the arrow extension, and decoding geometry needs spatial.
+          # The smoke scripts install both themselves; doing it here too fails fast, before
+          # the demo image build, when the extension repository is unreachable. Parquet
+          # itself is built into the CLI.
+          duckdb -c "install arrow; install spatial"
+        env:
+          DUCKDB_VERSION: v1.5.5
+
       # Builds the plugin zips (./mvnw), builds the image (downloads GeoServer + Java 25 base),
       # and starts GeoServer + the s3proxy emulator via docker compose.
       - name: Build and start the demo
@@ -61,39 +76,17 @@ jobs:
           echo "GeoServer did not become healthy in time"
           exit 1
 
-      - name: Smoke test (REST + WFS + WMS, local and S3 workspaces)
-        run: |
-          set -uo pipefail
-          base=http://localhost:8080/geoserver
-          fail() { echo "SMOKE FAIL: $1"; exit 1; }
+      # The checks live in demo/smoke/ as shell scripts, runnable against a local demo with
+      # `make demo-smoke`. Keeping them out of this file means a failure can be reproduced
+      # without re-running the workflow.
+      - name: Smoke test (core services)
+        run: demo/smoke/core.sh
 
-          # REST is up and authenticated
-          code=$(curl -s -o /dev/null -w '%{http_code}' -u admin:geoserver "$base/rest/about/version.json")
-          [ "$code" = "200" ] || fail "REST about/version returned HTTP $code"
-          echo "REST about/version: 200"
+      - name: Smoke test (GeoParquet output format)
+        run: demo/smoke/geoparquet.sh
 
-          # WFS feature counts. parquetry reads local files; parquetry-s3 reads from the s3proxy
-          # emulator via the AWS default credential chain. Both must return all 242 countries.
-          for ws in parquetry parquetry-s3; do
-            n=$(curl -s "$base/$ws/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=$ws:countries&resultType=hits" \
-                  | grep -oE 'numberMatched="[0-9]+"' | grep -oE '[0-9]+' || true)
-            echo "$ws:countries numberMatched=${n:-<none>}"
-            [ "$n" = "242" ] || fail "$ws:countries expected 242, got '${n:-<none>}'"
-          done
-
-          # WMS GetMap renders a PNG for the world layer group in each workspace
-          for ws in parquetry parquetry-s3; do
-            out=/tmp/$ws-world.png
-            curl -s -o "$out" "$base/$ws/wms?service=WMS&version=1.1.1&request=GetMap&layers=$ws:world&bbox=-180,-90,180,90&width=400&height=200&srs=EPSG:4326&format=image/png"
-            kind=$(file -b "$out")
-            echo "$ws:world -> $kind"
-            case "$kind" in
-              "PNG image data"*) ;;
-              *) fail "$ws:world did not render a PNG ($kind)";;
-            esac
-          done
-
-          echo "All smoke checks passed."
+      - name: Smoke test (Arrow IPC output format)
+        run: demo/smoke/arrow-ipc.sh
 
       - name: Dump container logs on failure
         if: failure()

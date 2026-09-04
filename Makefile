@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 # demo must stay .PHONY: the demo/ directory would otherwise satisfy the target as "up to date".
-.PHONY: help dev-setup format lint test verify clean compile package install geoserver-plugins demo-plugins demo demo-up demo-down demo-logs demo-dist demo-clean
+.PHONY: help dev-setup format lint test verify clean compile package install geoserver-plugins demo-plugins demo demo-up demo-down demo-logs demo-smoke demo-dist demo-clean
 
 # The GeoServer plugin-family demo (see demo/README.md).
 DEMO := demo
@@ -67,6 +67,13 @@ demo-down: ## Stop and remove the demo containers
 
 demo-logs: ## Follow the demo container logs
 	$(COMPOSE) logs -f
+
+# The same checks CI runs (see .github/workflows/geoserver-demo-smoke.yml). Needs a running
+# demo, and duckdb on PATH for the output-format checks.
+demo-smoke: ## Run the smoke checks against a running demo
+	GEOSERVER_URL=$(URL) $(DEMO)/smoke/core.sh
+	GEOSERVER_URL=$(URL) $(DEMO)/smoke/geoparquet.sh
+	GEOSERVER_URL=$(URL) $(DEMO)/smoke/arrow-ipc.sh
 
 demo-dist: demo-plugins ## Build the self-contained customer demo zip
 	rm -rf $(DIST) $(DIST).zip
