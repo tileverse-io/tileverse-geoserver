@@ -78,6 +78,24 @@ curl "http://localhost:8080/geoserver/parquetry/wfs?service=WFS&version=2.0.0&re
 &typeNames=parquetry:populated_places&count=5&outputFormat=application/json"
 ```
 
+## Smoke checks
+
+`demo/smoke/` holds the checks CI runs against the demo, as scripts you can run yourself once
+`make demo-up` is healthy:
+
+```bash
+make demo-smoke
+```
+
+`core.sh` covers REST, WFS counts and WMS rendering in both workspaces. `geoparquet.sh` and
+`arrow-ipc.sh` download the countries layer in each output format and read it back with DuckDB,
+which they expect on `PATH`. Run one on its own, or point any of them at another instance:
+
+```bash
+demo/smoke/arrow-ipc.sh
+GEOSERVER_URL=http://gs.example.com/geoserver demo/smoke/geoparquet.sh
+```
+
 ## The data
 
 The GeoParquet files in `data/ne/` are converted from the Natural Earth GeoPackage that ships
