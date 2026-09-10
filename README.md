@@ -33,7 +33,7 @@ a gigabyte or two of heap.
   native-access flags, for the Parquetry plugin: `parquetry-core` is compiled
   with preview features, and a Java 17/21 GeoServer cannot load it. The
   `storage-web` module itself is plain Java 17.
-- **GeoServer 3.0.0 / GeoTools 35.0** (the `provided` versions this repo builds
+- **GeoServer 3.0.1 / GeoTools 35.0** (the `provided` versions this repo builds
   against). The deployment target is GeoServer Cloud on Java 25.
 - Maven (use the bundled `./mvnw`).
 
