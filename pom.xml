@@ -543,6 +543,12 @@
             <artifactId>micrometer-observation</artifactId>
             <version>1.16.5</version>
           </dependency>
+          <!-- gs-ows pulls guava 33.6.0-jre; gt-coverage pulls 33.5.0-jre via imagen-stats; pin to the higher. -->
+          <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.6.0-jre</version>
+          </dependency>
         </dependencies>
       </dependencyManagement>
       <build>
