@@ -549,6 +549,14 @@
             <artifactId>guava</artifactId>
             <version>33.6.0-jre</version>
           </dependency>
+          <!-- GeoTools 35 manages imagen-core at 0.9.2, but the imageio-ext 2.1.2 release POM pulled by gt-geotiff
+               declares 0.9.3-SNAPSHOT. Pin the version shipped by GeoServer 3.0 because GeoTools' management does
+               not reach this build. -->
+          <dependency>
+            <groupId>org.eclipse.imagen</groupId>
+            <artifactId>imagen-core</artifactId>
+            <version>0.9.2</version>
+          </dependency>
         </dependencies>
       </dependencyManagement>
       <build>
