@@ -43,26 +43,22 @@
     <dependency>
       <groupId>org.geoserver</groupId>
       <artifactId>gs-main</artifactId>
-      <version>${gs.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.geoserver</groupId>
       <artifactId>gs-platform</artifactId>
-      <version>${gs.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.geoserver.web</groupId>
       <artifactId>gs-web-core</artifactId>
-      <version>${gs.version}</version>
       <scope>provided</scope>
     </dependency>
     <!-- GeoServer supplies the WFS service at runtime; the output formats register against its Response contract. -->
     <dependency>
       <groupId>org.geoserver</groupId>
       <artifactId>gs-wfs-core</artifactId>
-      <version>${gs.version}</version>
       <scope>provided</scope>
     </dependency>
     <!--
@@ -94,7 +90,6 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-tester</artifactId>
-      <version>10.10.0</version>
       <scope>test</scope>
     </dependency>
 
@@ -102,28 +97,24 @@
     <dependency>
       <groupId>org.geoserver</groupId>
       <artifactId>gs-wfs1_x</artifactId>
-      <version>${gs.version}</version>
       <scope>test</scope>
     </dependency>
     <!-- WFS test-support harness classes (WFSTestSupport, WFS1XTestSupport, GeoServerSystemTestSupport). -->
     <dependency>
       <groupId>org.geoserver</groupId>
       <artifactId>gs-main</artifactId>
-      <version>${gs.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.geoserver</groupId>
       <artifactId>gs-wfs-core</artifactId>
-      <version>${gs.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.geoserver</groupId>
       <artifactId>gs-wfs1_x</artifactId>
-      <version>${gs.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -196,7 +187,6 @@
     <dependency>
       <groupId>org.geoserver.web</groupId>
       <artifactId>gs-web-app</artifactId>
-      <version>${gs.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
