@@ -71,6 +71,7 @@
 
     <!-- This branch tracks the GeoServer 3.0 stable series. -->
     <gs.version>3.0.0-SNAPSHOT</gs.version>
+    <wicket.version>10.11.0</wicket.version>
     <!-- Jetty used only by the test-scope embedded launcher (Start); keep in step with GeoServer's Jetty. -->
     <jetty.version>12.1.8</jetty.version>
 
@@ -109,6 +110,65 @@
         <version>${parquetry.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver</groupId>
+        <artifactId>gs-platform</artifactId>
+        <version>${gs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver</groupId>
+        <artifactId>gs-main</artifactId>
+        <version>${gs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver.web</groupId>
+        <artifactId>gs-web-core</artifactId>
+        <version>${gs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver.web</groupId>
+        <artifactId>gs-web-app</artifactId>
+        <version>${gs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver</groupId>
+        <artifactId>gs-wfs-core</artifactId>
+        <version>${gs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver</groupId>
+        <artifactId>gs-wfs1_x</artifactId>
+        <version>${gs.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver</groupId>
+        <artifactId>gs-main</artifactId>
+        <version>${gs.version}</version>
+        <classifier>tests</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver</groupId>
+        <artifactId>gs-wfs-core</artifactId>
+        <version>${gs.version}</version>
+        <classifier>tests</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.geoserver</groupId>
+        <artifactId>gs-wfs1_x</artifactId>
+        <version>${gs.version}</version>
+        <classifier>tests</classifier>
+      </dependency>
+      <!-- The version gs-web-core ships; keep in step with gs.version. -->
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-select2</artifactId>
+        <version>${wicket.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.wicket</groupId>
+        <artifactId>wicket-tester</artifactId>
+        <version>${wicket.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -450,29 +510,6 @@
             <version>7.0.7</version>
             <type>pom</type>
             <scope>import</scope>
-          </dependency>
-          <!-- wicketstuff-select2 pulls wicket-webjars, which drags older wicket-core and friends; pin the wicket
-               artifacts on the version GeoServer ships (10.10.0). The wicket-bom POM is absent from the OSGeo repo;
-               pin the artifacts individually. -->
-          <dependency>
-            <groupId>org.apache.wicket</groupId>
-            <artifactId>wicket-core</artifactId>
-            <version>10.10.0</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.wicket</groupId>
-            <artifactId>wicket-util</artifactId>
-            <version>10.10.0</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.wicket</groupId>
-            <artifactId>wicket-request</artifactId>
-            <version>10.10.0</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.wicket</groupId>
-            <artifactId>wicket-extensions</artifactId>
-            <version>10.10.0</version>
           </dependency>
           <!-- jackson-dataformat-xml pulls stax2-api 4.3.0 directly and 4.2.2 via woodstox-core; pin the higher. -->
           <dependency>
