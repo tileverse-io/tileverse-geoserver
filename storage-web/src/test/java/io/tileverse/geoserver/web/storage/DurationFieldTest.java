@@ -21,12 +21,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-/**
- * Pins the two halves of the ISO-8601 bridge behind the duration widget: decomposition shows a stored string as an
- * integer amount in the largest exactly-representing unit, and composition writes the user's amount + unit back as the
- * strict ISO-8601 string tileverse-storage parses. A blank or unparseable stored value decomposes to an empty amount
- * over seconds; a sub-millisecond remainder truncates to milliseconds, the accepted trade-off of the design.
- */
+/** Truncating a sub-millisecond remainder to milliseconds is an accepted trade-off. */
 class DurationFieldTest {
 
     static Stream<Arguments> decompositions() {

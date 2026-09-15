@@ -28,15 +28,11 @@ import org.apache.wicket.model.util.SetModel;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 
 /**
- * A labelled group of checkboxes over a fixed list of choices, whose model is the set of checked choice codes. It is
- * the multi-select counterpart of the single-select {@link RadioGroupParamPanel}: same label plus {@link ListView}
- * shape and choice-label function, with {@code CheckGroup}/{@code Check} in place of {@code RadioGroup}/{@code Radio}
- * and a set of checked codes in place of a single selected value.
+ * A labelled checkbox group, the counterpart of {@link RadioGroupParamPanel}; its model is the set of checked choice
+ * codes.
  *
- * <p>The checked set is transient panel state, never a persisted connection parameter. The panel owns a private
- * {@link SetModel} seeded from a plain set and never binds the group to a store's connection-parameters map, which
- * keeps the multi-select a pure view over which backends' fields to show and stops it from ever writing a
- * {@code storage.provider} key (which the STAC store deliberately has none of).
+ * <p>The checked set is panel state, never bound to a store's connection parameters: it only picks the fields shown,
+ * and a store such as STAC deliberately has no {@code storage.provider} key.
  *
  * <p>Adapted from GeoServer's {@code RadioGroupParamPanel} (c) Open Source Geospatial Foundation, GPL-2.0.
  */
@@ -46,11 +42,8 @@ public class CheckGroupParamPanel extends Panel {
     private final CheckGroup<String> group;
 
     /**
-     * @param id the wicket id of this panel
-     * @param label the label naming the whole checkbox group
-     * @param initiallyChecked the choice codes to pre-check; copied into the panel's own transient model
-     * @param choices the selectable choice codes, one checkbox each, in render order
-     * @param choiceLabels maps a choice code to the label shown beside its checkbox
+     * @param initiallyChecked copied into the panel's own model
+     * @param choices in render order
      */
     public CheckGroupParamPanel(
             String id,
@@ -65,12 +58,10 @@ public class CheckGroupParamPanel extends Panel {
         add(group);
     }
 
-    /** The check group whose model object is the set of currently checked choice codes. */
     public CheckGroup<String> getFormComponent() {
         return group;
     }
 
-    /** ListView that renders one checkbox per choice code. */
     private static class DynamicCheckChoices extends ListView<String> {
 
         private final SerializableFunction<String, IModel<String>> choiceLabels;
@@ -98,9 +89,8 @@ public class CheckGroupParamPanel extends Panel {
     }
 
     /**
-     * A checkbox whose submitted form value is its choice code rather than Wicket's default per-render generated value.
-     * The list rebuilds its checkboxes on each render of the group; a code-based value stays stable across those
-     * rebuilds, keeping the selection intact when the surrounding form re-renders after a failed submit.
+     * Submits its choice code, stable across the list's per-render rebuilds, rather than Wicket's generated value; this
+     * keeps the selection when the form re-renders after a failed submit.
      */
     private static final class StableValueCheck extends Check<String> {
 

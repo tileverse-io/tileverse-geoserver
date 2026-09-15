@@ -18,18 +18,13 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 /**
- * Wraps one connection-parameter field, optionally titling it with a section header. The store edit panel passes a
- * header model for the first field of each titled backend group and {@code null} for the rest, which names each group
- * once and leaves the remaining fields bare. Toggling this wrapper's visibility hides the header together with its
- * field, keeping a deselected group from leaving an orphan header behind.
- *
- * <p>The wrapper takes the {@code componentId} the store page assigns to a parameter field; the wrapped field takes the
- * wrapper's own {@link #FIELD_ID} child slot.
+ * One parameter field with an optional group header; hiding the wrapper hides both, leaving no orphan header behind a
+ * deselected group.
  */
 @SuppressWarnings("serial")
 class GroupedParamPanel extends Panel {
 
-    /** The wicket id the wrapped field panel must be constructed with to nest inside this wrapper. */
+    /** The wicket id required of the wrapped field. */
     static final String FIELD_ID = "field";
 
     GroupedParamPanel(String id, Panel field, IModel<String> headerOrNull) {

@@ -25,10 +25,7 @@ class StorageProviderLabelsTest {
 
     @Test
     void everyRegisteredProviderHasALabel() throws Exception {
-        Properties labels = new Properties();
-        try (InputStream in = getClass().getResourceAsStream("/GeoServerApplication.properties")) {
-            labels.load(in);
-        }
+        Properties labels = loadLabels();
         for (StorageProvider provider : StorageProvider.getProviders()) {
             String key = "storage.provider." + provider.getId();
             assertThat(labels.getProperty(key)).as("missing label %s", key).isNotBlank();
@@ -36,9 +33,26 @@ class StorageProviderLabelsTest {
     }
 
     @Test
+    void everyRegisteredProviderHasATooltip() throws Exception {
+        Properties labels = loadLabels();
+        for (StorageProvider provider : StorageProvider.getProviders()) {
+            String key = "storage.provider." + provider.getId() + ".tooltip";
+            assertThat(labels.getProperty(key)).as("missing tooltip %s", key).isNotBlank();
+        }
+    }
+
+    @Test
     void azureDataLakeReusesTheAzureParameterGroup() {
         assertThat(StorageParamVisibility.groupsForProvider("azure-datalake")).containsExactly("azure");
         assertThat(StorageParamVisibility.groupsForProvider("s3")).containsExactly("s3");
-        assertThat(StorageParamVisibility.selectableGroups()).containsExactly("azure", "gcs", "http", "s3");
+        assertThat(StorageParamVisibility.selectableGroups()).containsExactly("http", "s3", "gcs", "azure", "file");
+    }
+
+    private Properties loadLabels() throws Exception {
+        Properties labels = new Properties();
+        try (InputStream in = getClass().getResourceAsStream("/GeoServerApplication.properties")) {
+            labels.load(in);
+        }
+        return labels;
     }
 }
