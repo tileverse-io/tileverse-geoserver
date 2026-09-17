@@ -17,7 +17,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
-/** Hosts a {@link DurationParamPanel} inside a plain form for the WicketTester render and submit tests. */
+/** Hosts a {@link DurationParamPanel} in a plain form. */
 @SuppressWarnings("serial")
 class DurationParamPanelTestPage extends WebPage {
 

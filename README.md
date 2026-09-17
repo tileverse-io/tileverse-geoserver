@@ -12,8 +12,9 @@ arrive as their engines mature.
 | `parquetry/` | `io.tileverse.geoserver:tileverse-geoserver-parquetry` | 25 (preview) |
 
 `storage-web` holds the tileverse-storage-aware Wicket store-edit panels
-(provider selector, per-backend connection parameters, secret masking, the
-searchable AWS region dropdown). It has no dependency on any format engine and
+(provider selector, per-backend connection parameters grouped in the providers'
+declared order, typed widgets, secret masking, the searchable AWS region
+dropdown). It has no dependency on any format engine and
 no preview bytecode; any store plugin that reads through tileverse-storage's
 `RangeReader` SPI (local files, HTTP, S3, Azure, GCS) can reuse it.
 

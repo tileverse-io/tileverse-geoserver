@@ -15,13 +15,17 @@ custom store-edit panel. The `applicationContext.xml` here declares:
 
 ## Cloud storage panel
 
-`GeoParquetDataStoreEditPanel` is a provider-driven store-edit panel. The factory
-declares the tileverse `storage.*` connection parameters (S3, Azure, GCS, HTTP
-auth plus a memory-cache toggle); the panel renders a `storage.provider` selector
-as a segmented toggle and reveals only the selected provider's fields, hiding the
-rest. The AWS region is a searchable Select2 dropdown, and secret fields (keys,
+`GeoParquetDataStoreEditPanel` and `StacDataStoreEditPanel` render the tileverse
+`storage.*` connection parameters through the shared storage section from
+[storage-web](../storage-web): a `storage.provider` selector as a segmented
+toggle (GeoParquet) or one checkbox per backend (STAC), then each backend's
+fields under a header, in the provider's declared order, showing only the
+selected backends. Booleans render as checkboxes, the AWS region as a
+searchable dropdown, retry delays as duration widgets, and secrets (keys,
 tokens, passwords) are masked. The provider is auto-detected from the URI when
-left unset. Local files need no provider selection.
+left unset; local files need no provider selection. GeoParquet does not expose
+the memory-cache toggle, and saving a store drops a previously stored one: the
+engine applies its own caching default.
 
 ## WFS output formats
 

@@ -34,13 +34,13 @@
 
 /* Default state for the custom 'button' label */
 .radio-group-param .gs-list-item-class label {
-    background-color: var(--gs-table-bg-even, #f0f0f0); /* Added fallback color */
-    color: rgba(0, 0, 0, 0.6);
+    background-color: var(--gs-tertiary-bg);
+    color: var(--gs-secondary-color);
     line-height: 1;
     text-align: center;
     padding: 2px 16px;
     margin-right: -1px; /* Overlap borders slightly for smooth appearance */
-    border: 1px solid rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--gs-border-color);
     box-shadow: none;
     transition: all 0.1s ease-in-out;
     display: inline-block; /* Ensures padding and margin work correctly */
@@ -49,24 +49,24 @@
 
 .radio-group-param .gs-list-item-class label:hover {
     cursor: pointer;
-    background-color: var(--gs-table-bg-hover, #e1e1e1); /* hover style */
+    background-color: var(--gs-secondary-bg);
 }
 
-/* The core fix: Style the label immediately after the checked input */
+/* The selected segment, in the theme's primary color like GeoServer's checked inputs */
 .radio-group-param .gs-list-item-class input[type="radio"]:checked + label {
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
     font-weight: bold;
-    background-color: #a5dc86; /* Default checked color */
-    color: #fff; /* change text color when selected */
+    background-color: var(--gs-primary);
+    border-color: var(--gs-primary);
+    color: #fff;
 }
 
 /* Styles for disabled state */
 .radio-group-param .gs-list-item-class input[type="radio"]:disabled + label {
     box-shadow: none;
     font-style: italic;
-    background-color: #e4e4e4;
+    background-color: var(--gs-secondary-bg);
     cursor: not-allowed;
-    color: rgba(0, 0, 0, 0.4);
+    color: var(--gs-secondary-color);
 }
 
 /* Specific colors based on dynamic classes added to the INPUT element */
@@ -85,11 +85,11 @@ input[type="radio"]:checked[class~="rw"] + label  {
 
 /* Rounded corners for the first and last items in the group */
 .radio-group-param .gs-list-item-class:first-child label {
-    border-radius: 4px 0 0 4px;
+    border-radius: var(--gs-border-radius) 0 0 var(--gs-border-radius);
 }
 
 .radio-group-param .gs-list-item-class:last-child label {
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 var(--gs-border-radius) var(--gs-border-radius) 0;
 }
 
 /*
@@ -109,10 +109,10 @@ input[type="radio"]:checked[class~="rw"] + label  {
     }
 
     .radio-group-param .gs-list-item-class:first-child label {
-        border-radius: 4px 4px 0 0;
+        border-radius: var(--gs-border-radius) var(--gs-border-radius) 0 0;
     }
 
     .radio-group-param .gs-list-item-class:last-child label {
-        border-radius: 0 0 4px 4px;
+        border-radius: 0 0 var(--gs-border-radius) var(--gs-border-radius);
     }
 }

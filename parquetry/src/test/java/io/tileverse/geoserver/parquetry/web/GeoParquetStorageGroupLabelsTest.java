@@ -17,49 +17,43 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
-import org.geotools.api.data.DataAccessFactory.Param;
 import org.junit.jupiter.api.Test;
 
-import io.tileverse.geoserver.web.storage.StorageParamVisibility;
+import io.tileverse.storage.StorageParameter;
 
-import io.tileverse.parquetry.geotools.parquet.GeoParquetDataStoreFactory;
+import io.tileverse.geoserver.web.storage.StorageParams;
 
 /**
- * Pins the GeoParquet factory's storage parameters to the shared panel contract: every backend group the factory
- * reports is one the visibility rules know, and every titled group resolves a section label. The labels merge from
- * every {@code GeoServerApplication.properties} on the classpath, exactly as GeoServer's resource loader does - the
- * storage labels ship in the storage-web jar, the store-specific ones in this plugin's.
+ * Pins that every backend group rendered by the shared storage section has a section label on the parquetry classpath,
+ * where storage-web's bundle and this module's bundle merge.
  */
 class GeoParquetStorageGroupLabelsTest {
 
     @Test
-    void titlesEveryBackendGroupTheGeoParquetFactoryReports() {
-        Set<String> firstKeys = StorageParamVisibility.firstParamKeysPerGroup(orderedFactoryKeys());
-        assertThat(firstKeys.stream().map(StorageParamVisibility::groupOf))
-                .containsExactlyInAnyOrder("s3", "azure", "gcs", "http", "caching");
+    void ordersCachingFirstThenEveryBackendGroup() {
+        assertThat(renderedGroups()).containsExactly("caching", "http", "s3", "gcs", "azure", "file");
     }
 
     @Test
-    void everyTitledGroupHasASectionLabel() throws IOException {
+    void everyRenderedGroupHasASectionLabel() throws IOException {
         Properties labels = mergedSectionLabels();
-        Set<String> firstKeys = StorageParamVisibility.firstParamKeysPerGroup(orderedFactoryKeys());
-        for (String key : firstKeys) {
-            String labelKey = "storage.group." + StorageParamVisibility.groupOf(key);
+        for (String group : renderedGroups()) {
+            String labelKey = "storage.group." + group;
             assertThat(labels.getProperty(labelKey))
                     .as("missing section label %s", labelKey)
                     .isNotBlank();
         }
     }
 
-    private static List<String> orderedFactoryKeys() {
-        Param[] parameters = new GeoParquetDataStoreFactory().getParametersInfo();
-        return Arrays.stream(parameters).map(parameter -> parameter.key).toList();
+    private static List<String> renderedGroups() {
+        return StorageParams.orderedParameters(true).stream()
+                .map(StorageParameter::group)
+                .distinct()
+                .toList();
     }
 
     private static Properties mergedSectionLabels() throws IOException {

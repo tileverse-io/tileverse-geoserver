@@ -23,9 +23,8 @@ import org.apache.wicket.request.resource.PackageResourceReference;
 import org.geoserver.web.data.store.panel.ParamPanel;
 
 /**
- * A labelled duration input for a Duration-typed connection parameter: an integer amount beside a time-unit dropdown in
- * place of a raw ISO-8601 text box, over the same stored string value. Follows the label + feedback-border +
- * form-component shape of GeoServer's {@code TextParamPanel}; the composition itself lives in {@link DurationField}.
+ * A labelled {@link DurationField} in place of a raw ISO-8601 text box, laid out like GeoServer's
+ * {@code TextParamPanel}.
  */
 @SuppressWarnings("serial")
 class DurationParamPanel extends Panel implements ParamPanel<String> {
