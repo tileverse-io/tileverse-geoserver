@@ -96,13 +96,13 @@ public class StorageParamsPanel extends Panel {
         applyVisibility(null);
     }
 
-    /** The row rendering {@code key}, toggled with its backend group; for tests. */
-    Component rowFor(String key) {
+    /** The row rendering {@code key}, toggled with its backend group; null when the section omits the parameter. */
+    public Component rowFor(String key) {
         return rowsByKey.get(key);
     }
 
-    /** The widget rendering {@code key}; for tests. */
-    Panel fieldFor(String key) {
+    /** The widget rendering {@code key}. */
+    public Panel fieldFor(String key) {
         return (Panel) rowFor(key).get(GroupedParamPanel.FIELD_ID);
     }
 
