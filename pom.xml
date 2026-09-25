@@ -511,6 +511,21 @@
             <type>pom</type>
             <scope>import</scope>
           </dependency>
+          <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-core</artifactId>
+            <version>${wicket.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-util</artifactId>
+            <version>${wicket.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.wicket</groupId>
+            <artifactId>wicket-request</artifactId>
+            <version>${wicket.version}</version>
+          </dependency>
           <!-- jackson-dataformat-xml pulls stax2-api 4.3.0 directly and 4.2.2 via woodstox-core; pin the higher. -->
           <dependency>
             <groupId>org.codehaus.woodstox</groupId>
