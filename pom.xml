@@ -62,18 +62,20 @@
   </distributionManagement>
 
   <properties>
-    <!-- Series-based versioning: the version tracks the compatible GeoServer series (3.1-SNAPSHOT on the
-         branch following GeoServer 3.1, releases 3.1-1, 3.1-2, ...); gs.version stays independent because
+    <!-- Series-based versioning: the version tracks the compatible GeoServer series (2.28-SNAPSHOT on the
+         branch following GeoServer 2.28, releases 2.28-1, 2.28-2, ...); gs.version stays independent because
          the plugin may release more than once against one GeoServer series. -->
-    <revision>3.1-SNAPSHOT</revision>
+    <revision>2.28-SNAPSHOT</revision>
     <!-- The parquetry engine this plugin builds on; resolved from Maven Central (release) or the snapshot repo below. -->
     <parquetry.version>1.0-SNAPSHOT</parquetry.version>
 
-    <!-- main tracks the GeoServer development series; release branches pin the matching GeoServer release. -->
-    <gs.version>3.1.0-SNAPSHOT</gs.version>
-    <wicket.version>10.11.0</wicket.version>
+    <!-- This branch tracks the GeoServer 2.28 stable series, pinned to the release verified with the plugins. -->
+    <gs.version>2.28.5</gs.version>
+    <wicket.version>9.23.0</wicket.version>
     <!-- Jetty used only by the test-scope embedded launcher (Start); keep in step with GeoServer's Jetty. -->
-    <jetty.version>12.1.8</jetty.version>
+    <jetty.version>10.0.25</jetty.version>
+    <!-- Servlet API for the test-scope Wicket tester and the launcher; the version used by GeoServer 2.28. -->
+    <servlet-api.version>3.1.0</servlet-api.version>
 
     <!-- GPG signing is off by default; the release pipeline flips it to false. -->
     <gpg.skip>true</gpg.skip>
@@ -133,12 +135,7 @@
       </dependency>
       <dependency>
         <groupId>org.geoserver</groupId>
-        <artifactId>gs-wfs-core</artifactId>
-        <version>${gs.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.geoserver</groupId>
-        <artifactId>gs-wfs1_x</artifactId>
+        <artifactId>gs-wfs</artifactId>
         <version>${gs.version}</version>
       </dependency>
       <dependency>
@@ -149,13 +146,7 @@
       </dependency>
       <dependency>
         <groupId>org.geoserver</groupId>
-        <artifactId>gs-wfs-core</artifactId>
-        <version>${gs.version}</version>
-        <classifier>tests</classifier>
-      </dependency>
-      <dependency>
-        <groupId>org.geoserver</groupId>
-        <artifactId>gs-wfs1_x</artifactId>
+        <artifactId>gs-wfs</artifactId>
         <version>${gs.version}</version>
         <classifier>tests</classifier>
       </dependency>
@@ -166,9 +157,25 @@
         <version>${wicket.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.wicket</groupId>
-        <artifactId>wicket-tester</artifactId>
-        <version>${wicket.version}</version>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>${servlet-api.version}</version>
+      </dependency>
+      <!-- Jetty for the test-scope embedded GeoServer launchers. -->
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-server</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-webapp</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+        <version>${jetty.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -507,10 +514,12 @@
           <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-framework-bom</artifactId>
-            <version>7.0.7</version>
+            <version>5.3.39</version>
             <type>pom</type>
             <scope>import</scope>
           </dependency>
+          <!-- wicketstuff-select2 9.23.0 pulls wicket-webjars 3.0.8, built against wicket-core 9.16.0; GeoServer
+               manages every Wicket artifact at one version and this does the same. -->
           <dependency>
             <groupId>org.apache.wicket</groupId>
             <artifactId>wicket-core</artifactId>
@@ -525,6 +534,36 @@
             <groupId>org.apache.wicket</groupId>
             <artifactId>wicket-request</artifactId>
             <version>${wicket.version}</version>
+          </dependency>
+          <!-- json-lib 2.4.2-geoserver pulls commons-beanutils 1.8.0, commons-lang 2.5 (2.3 via ezmorph) and
+               commons-logging 1.1.1 (1.2 via httpclient, 1.3.5 via log4j-jcl and spring-core), and wicket-util
+               pulls commons-fileupload 1.5 against gs-main's 1.6.0: pin each to the version resolved by
+               GeoServer 2.28. commons-beanutils 1.11.0 in turn asks for commons-collections 3.2.2 against
+               json-lib's 3.2.1. -->
+          <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.11.0</version>
+          </dependency>
+          <dependency>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.2</version>
+          </dependency>
+          <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.6.0</version>
+          </dependency>
+          <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+          </dependency>
+          <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>1.3.5</version>
           </dependency>
           <!-- jackson-dataformat-xml pulls stax2-api 4.3.0 directly and 4.2.2 via woodstox-core; pin the higher. -->
           <dependency>
@@ -546,7 +585,7 @@
           </dependency>
           <!--
             The GeoServer/GeoTools provided tree collides with parquetry's compile tree (and itself) on a handful of
-            common XML/jakarta/commons libraries. Pin each to the higher version to converge the dependency graph.
+            common XML and commons libraries. Pin each to the higher version to converge the dependency graph.
           -->
           <dependency>
             <groupId>com.fasterxml.woodstox</groupId>
@@ -563,37 +602,11 @@
             <artifactId>commons-io</artifactId>
             <version>2.21.0</version>
           </dependency>
-          <dependency>
-            <groupId>jakarta.activation</groupId>
-            <artifactId>jakarta.activation-api</artifactId>
-            <version>2.1.4</version>
-          </dependency>
-          <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>4.0.5</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.httpcomponents.core5</groupId>
-            <artifactId>httpcore5</artifactId>
-            <version>5.3.6</version>
-          </dependency>
-          <dependency>
-            <groupId>org.glassfish.jaxb</groupId>
-            <artifactId>jaxb-runtime</artifactId>
-            <version>4.0.7</version>
-          </dependency>
           <!-- google-cloud-storage pulls checker-qual 3.49.0; gt-jdbc-postgis 35.0 pulls 3.52.0; pin to the higher. -->
           <dependency>
             <groupId>org.checkerframework</groupId>
             <artifactId>checker-qual</artifactId>
             <version>3.52.0</version>
-          </dependency>
-          <!-- spring-security 7.0.4 pulls micrometer-observation 1.16.4; spring-context 7.0.7 pulls 1.16.5; pin higher. -->
-          <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-observation</artifactId>
-            <version>1.16.5</version>
           </dependency>
           <!-- gs-ows pulls guava 33.6.0-jre; gt-coverage pulls 33.5.0-jre via imagen-stats; pin to the higher. -->
           <dependency>
