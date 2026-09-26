@@ -54,6 +54,9 @@ class StorageParamsPanelTest {
     private static final Pattern SEARCHABLE_DROPDOWN_STYLESHEET =
             Pattern.compile("Select2ChoiceParamPanel[^\"]*\\.css");
 
+    /** The checkbox group's stylesheet, which keeps each checkbox on one line with its label. */
+    private static final Pattern CHECKBOX_GROUP_STYLESHEET = Pattern.compile("CheckGroupParamPanel[^\"]*\\.css");
+
     /** Matches a provider segment; requires {@code class} before {@code title}, tolerating attributes between. */
     private static final Pattern PROVIDER_SEGMENT_WITH_TOOLTIP = Pattern.compile("gs-list-item-class\"[^>]*title=\"");
 
@@ -142,6 +145,16 @@ class StorageParamsPanelTest {
 
         String document = tester.getLastResponse().getDocument();
         assertThat(countMatches(SEARCHABLE_DROPDOWN_STYLESHEET, document)).isEqualTo(1);
+    }
+
+    @Test
+    void rendersTheCheckboxGroupStylesheetOnce() {
+        params.put("storage.s3.region", "us-east-1");
+
+        renderPanel(BackendSelection.MULTIPLE_BACKENDS, true);
+
+        String document = tester.getLastResponse().getDocument();
+        assertThat(countMatches(CHECKBOX_GROUP_STYLESHEET, document)).isEqualTo(1);
     }
 
     @Test

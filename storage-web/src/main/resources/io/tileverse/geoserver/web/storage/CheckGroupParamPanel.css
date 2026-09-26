@@ -1,0 +1,10 @@
+/*
+ * GeoServer 2.28 styles every label as a block, which drops each label under
+ * its checkbox. A flex row keeps the pair on one line; GeoServer 3 already
+ * lays them out inline, and there the rule only aligns the two vertically.
+ */
+.check-group-param .gs-list-item-class {
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+}

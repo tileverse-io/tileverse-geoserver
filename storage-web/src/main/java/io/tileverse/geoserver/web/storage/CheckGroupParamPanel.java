@@ -16,6 +16,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
 import org.apache.wicket.markup.html.form.CheckGroup;
@@ -25,6 +27,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.util.SetModel;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 
 /**
@@ -60,6 +63,14 @@ public class CheckGroupParamPanel extends Panel {
 
     public CheckGroup<String> getFormComponent() {
         return group;
+    }
+
+    @Override
+    public void renderHead(IHeaderResponse response) {
+        super.renderHead(response);
+        PackageResourceReference stylesheet =
+                new PackageResourceReference(CheckGroupParamPanel.class, "CheckGroupParamPanel.css");
+        response.render(CssHeaderItem.forReference(stylesheet));
     }
 
     private static class DynamicCheckChoices extends ListView<String> {
