@@ -14,6 +14,10 @@ package io.tileverse.geoserver.web.storage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +32,9 @@ import org.junit.jupiter.api.Test;
 class RadioGroupParamPanelTest {
 
     private static final Pattern TITLE_ATTRIBUTE = Pattern.compile("title=\"");
+
+    /** A var() without a fallback resolves to nothing on a theme lacking the variable, such as GeoServer 2.28's. */
+    private static final Pattern THEME_VARIABLE_WITHOUT_FALLBACK = Pattern.compile("var\\(--gs-[a-z0-9-]+\\)");
 
     private WicketTester tester;
 
@@ -72,6 +79,25 @@ class RadioGroupParamPanelTest {
 
         assertThat(countMatches(TITLE_ATTRIBUTE, tester.getLastResponseAsString()))
                 .isEqualTo(1);
+    }
+
+    @Test
+    void everyThemeVariableInTheStylesheetHasAFallback() throws IOException {
+        String stylesheet = readStylesheet();
+
+        List<String> withoutFallback = new ArrayList<>();
+        Matcher matcher = THEME_VARIABLE_WITHOUT_FALLBACK.matcher(stylesheet);
+        while (matcher.find()) {
+            withoutFallback.add(matcher.group());
+        }
+
+        assertThat(withoutFallback).isEmpty();
+    }
+
+    private static String readStylesheet() throws IOException {
+        try (InputStream stream = RadioGroupParamPanel.class.getResourceAsStream("RadioGroupParamPanel.css")) {
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
     private static int countMatches(Pattern pattern, String markup) {
