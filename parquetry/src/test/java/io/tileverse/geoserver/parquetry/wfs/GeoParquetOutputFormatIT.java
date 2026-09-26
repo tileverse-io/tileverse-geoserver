@@ -24,7 +24,7 @@ import java.util.Set;
 import javax.xml.namespace.QName;
 
 import org.geoserver.data.test.SystemTestData;
-import org.geoserver.wfs.WFS1XTestSupport;
+import org.geoserver.wfs.WFSTestSupport;
 import org.geotools.api.data.Query;
 import org.geotools.api.data.SimpleFeatureSource;
 import org.geotools.api.feature.simple.SimpleFeature;
@@ -46,7 +46,7 @@ import io.tileverse.parquetry.io.LocalFileSource;
  * and error reporting. The dataset name given to the read-back catalog is arbitrary; a single-file
  * {@link FilesetCatalog} exposes exactly one dataset regardless of the name chosen.
  */
-public class GeoParquetOutputFormatIT extends WFS1XTestSupport {
+public class GeoParquetOutputFormatIT extends WFSTestSupport {
 
     private static final String READBACK_DATASET_NAME = "readback";
 

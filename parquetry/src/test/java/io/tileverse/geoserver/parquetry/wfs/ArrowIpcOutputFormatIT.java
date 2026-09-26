@@ -26,7 +26,7 @@ import org.apache.arrow.vector.ipc.ArrowStreamReader;
 import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.Schema;
 import org.geoserver.data.test.SystemTestData;
-import org.geoserver.wfs.WFS1XTestSupport;
+import org.geoserver.wfs.WFSTestSupport;
 import org.geotools.api.data.Query;
 import org.geotools.api.data.SimpleFeatureSource;
 import org.geotools.api.feature.simple.SimpleFeatureType;
@@ -39,7 +39,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
  * from the source feature type, and error reporting. The format takes no {@code format_options}; every write knob comes
  * from the engine's fixed defaults.
  */
-public class ArrowIpcOutputFormatIT extends WFS1XTestSupport {
+public class ArrowIpcOutputFormatIT extends WFSTestSupport {
 
     @Test
     public void getFeatureProducesAReadableArrowStream() throws Exception {

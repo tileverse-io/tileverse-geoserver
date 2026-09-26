@@ -17,7 +17,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.stream.Stream;
 
 import org.geoserver.config.impl.GeoServerImpl;
-import org.geoserver.platform.ModuleStatus;
 import org.geoserver.platform.ModuleStatusImpl;
 import org.geoserver.web.data.resource.DataStorePanelInfo;
 import org.junit.jupiter.api.AfterEach;
@@ -42,7 +41,8 @@ import io.tileverse.parquetry.geotools.parquet.StacDataStoreFactory;
  * Loads the plugin's {@code applicationContext.xml} the same way GeoServer does (Spring bean definitions at the jar
  * root) and asserts the store-panel, module-status, and WFS output format beans are wired to their factories and
  * formats. A parent context supplies the {@code geoServer} singleton the output format beans depend on, the same way
- * GeoServer's own application context does at runtime.
+ * GeoServer's own application context does at runtime. Runs on the Spring 5.3 of GeoServer 2.28, which cannot inspect
+ * Java 25 class files: every bean must be declared in the XML itself.
  */
 class PluginContextTest {
 
@@ -92,14 +92,13 @@ class PluginContextTest {
 
     @ParameterizedTest
     @MethodSource("featureModuleStatuses")
-    void eachFeatureConfigurationReportsItsOwnModuleStatus(String beanName, String module, String component) {
+    void eachFeatureReportsItsOwnModuleStatus(String beanName, String module, String component) {
         ModuleStatusImpl status = context.getBean(beanName, ModuleStatusImpl.class);
 
         assertThat(status.getModule()).isEqualTo(module);
         assertThat(status.getComponent()).contains(component);
         assertThat(status.isAvailable()).isTrue();
         assertThat(status.isEnabled()).isTrue();
-        assertThat(status.getCategory()).isEqualTo(ModuleStatus.Category.COMMUNITY);
     }
 
     static Stream<Arguments> featureModuleStatuses() {

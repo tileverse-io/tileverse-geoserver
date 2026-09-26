@@ -17,12 +17,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Objects;
 
-import org.eclipse.jetty.ee10.webapp.WebAppContext;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.webapp.WebAppContext;
 
 /**
  * Embedded GeoServer launcher for IDE development. Runs the full GeoServer web application with the parquetry-geoserver

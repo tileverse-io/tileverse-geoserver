@@ -13,23 +13,81 @@
 -->
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="
              http://www.springframework.org/schema/beans
-             http://www.springframework.org/schema/beans/spring-beans.xsd
-             http://www.springframework.org/schema/context
-             http://www.springframework.org/schema/context/spring-context.xsd">
+             http://www.springframework.org/schema/beans/spring-beans.xsd">
 
   <!--
-    The store-panel, WFS output format, and module-status beans are defined by the @Configuration classes below,
-    the single source of truth that GeoServer Cloud imports directly. annotation-config registers the processor
-    that runs their @Bean methods here, giving vanilla GeoServer the same beans.
+    Plain bean definitions, as GeoServer's own modules declare theirs. Spring 5.3, used by GeoServer 2.28, cannot
+    inspect Java 25 class files: a @Configuration class declared here would be registered as an
+    ordinary bean and its @Bean methods never called.
   -->
-  <context:annotation-config/>
 
-  <bean class="io.tileverse.geoserver.parquetry.config.GeoParquetConfiguration"/>
-  <bean class="io.tileverse.geoserver.parquetry.config.IcebergConfiguration"/>
-  <bean class="io.tileverse.geoserver.parquetry.config.StacConfiguration"/>
-  <bean class="io.tileverse.geoserver.parquetry.config.GeoParquetWfsOutputFormatConfiguration"/>
-  <bean class="io.tileverse.geoserver.parquetry.config.ArrowIpcWfsOutputFormatConfiguration"/>
+  <!-- Store edit panels: one per store type, each binding its engine factory to the panel and icon. -->
+  <bean id="parquetryGeoParquetDataStorePanel" class="org.geoserver.web.data.resource.DataStorePanelInfo">
+    <property name="id" value="parquetry-parquet"/>
+    <property name="factoryClass" value="io.tileverse.parquetry.geotools.parquet.GeoParquetDataStoreFactory"/>
+    <property name="componentClass" value="io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel"/>
+    <property name="iconBase" value="io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel"/>
+    <property name="icon" value="img/icons/parquetry.svg"/>
+  </bean>
+  <bean id="icebergDataStorePanel" class="org.geoserver.web.data.resource.DataStorePanelInfo">
+    <property name="id" value="iceberg"/>
+    <property name="factoryClass" value="io.tileverse.parquetry.geotools.iceberg.IcebergDataStoreFactory"/>
+    <property name="componentClass" value="io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel"/>
+    <property name="iconBase" value="io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel"/>
+    <property name="icon" value="img/icons/apache-iceberg.svg"/>
+  </bean>
+  <bean id="stacDataStorePanel" class="org.geoserver.web.data.resource.DataStorePanelInfo">
+    <property name="id" value="stac-geoparquet"/>
+    <property name="factoryClass" value="io.tileverse.parquetry.geotools.parquet.StacDataStoreFactory"/>
+    <property name="componentClass" value="io.tileverse.geoserver.parquetry.web.StacDataStoreEditPanel"/>
+    <property name="iconBase" value="io.tileverse.geoserver.parquetry.web.StacDataStoreEditPanel"/>
+    <property name="icon" value="img/icons/stac-geoparquet.svg"/>
+  </bean>
+
+  <!-- WFS GetFeature output formats; geoServer is GeoServer's own configuration bean. -->
+  <bean id="geoParquetOutputFormat" class="io.tileverse.geoserver.parquetry.wfs.GeoParquetOutputFormat">
+    <constructor-arg ref="geoServer"/>
+  </bean>
+  <bean id="arrowIpcOutputFormat" class="io.tileverse.geoserver.parquetry.wfs.ArrowIpcOutputFormat">
+    <constructor-arg ref="geoServer"/>
+  </bean>
+
+  <!-- One row per feature under About > Server Status > Modules. -->
+  <bean id="geoParquetModuleStatus" class="org.geoserver.platform.ModuleStatusImpl">
+    <property name="module" value="gs-parquetry-geoparquet"/>
+    <property name="name" value="Parquetry GeoParquet Store"/>
+    <property name="component" value="GeoParquet DataStore"/>
+    <property name="available" value="true"/>
+    <property name="enabled" value="true"/>
+  </bean>
+  <bean id="icebergModuleStatus" class="org.geoserver.platform.ModuleStatusImpl">
+    <property name="module" value="gs-parquetry-iceberg"/>
+    <property name="name" value="Parquetry Iceberg Store"/>
+    <property name="component" value="Iceberg DataStore"/>
+    <property name="available" value="true"/>
+    <property name="enabled" value="true"/>
+  </bean>
+  <bean id="stacModuleStatus" class="org.geoserver.platform.ModuleStatusImpl">
+    <property name="module" value="gs-parquetry-stac"/>
+    <property name="name" value="Parquetry STAC Store"/>
+    <property name="component" value="STAC DataStore"/>
+    <property name="available" value="true"/>
+    <property name="enabled" value="true"/>
+  </bean>
+  <bean id="geoParquetWfsOutputFormatModuleStatus" class="org.geoserver.platform.ModuleStatusImpl">
+    <property name="module" value="gs-parquetry-wfs-geoparquet"/>
+    <property name="name" value="Parquetry GeoParquet WFS Output Format"/>
+    <property name="component" value="WFS GetFeature output format"/>
+    <property name="available" value="true"/>
+    <property name="enabled" value="true"/>
+  </bean>
+  <bean id="arrowIpcWfsOutputFormatModuleStatus" class="org.geoserver.platform.ModuleStatusImpl">
+    <property name="module" value="gs-parquetry-wfs-arrow-ipc"/>
+    <property name="name" value="Parquetry Arrow IPC WFS Output Format"/>
+    <property name="component" value="WFS GetFeature output format"/>
+    <property name="available" value="true"/>
+    <property name="enabled" value="true"/>
+  </bean>
 </beans>
