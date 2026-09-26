@@ -12,8 +12,6 @@
  */
 package io.tileverse.geoserver.web.storage;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,17 +49,12 @@ import org.wicketstuff.select2.StringTextChoiceProvider;
 @SuppressWarnings("serial")
 public class Select2ChoiceParamPanel<T extends Serializable> extends Panel implements ParamPanel<T> {
 
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(Select2ChoiceParamPanel.class);
-
     @Override
     public void renderHead(IHeaderResponse response) {
         super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            PackageResourceReference reference =
-                    new PackageResourceReference(getClass(), getClass().getSimpleName() + ".css");
-            response.render(CssHeaderItem.forReference(reference));
-        }
+        PackageResourceReference stylesheet =
+                new PackageResourceReference(Select2ChoiceParamPanel.class, "Select2ChoiceParamPanel.css");
+        response.render(CssHeaderItem.forReference(stylesheet));
     }
 
     private Select2Choice<T> choice;

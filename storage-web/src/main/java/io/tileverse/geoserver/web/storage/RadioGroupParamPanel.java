@@ -12,8 +12,6 @@
  */
 package io.tileverse.geoserver.web.storage;
 
-import static org.geoserver.web.util.WebUtils.IsWicketCssFileEmpty;
-
 import java.io.Serializable;
 import java.util.List;
 
@@ -40,8 +38,6 @@ import org.geoserver.web.data.store.panel.ParamPanel;
 /** A segmented radio choice panel, rendering one {@link Radio} per choice inside a {@link RadioGroup}. */
 @SuppressWarnings("serial")
 public class RadioGroupParamPanel<T extends Serializable> extends Panel implements ParamPanel<T> {
-
-    private static final boolean isCssEmpty = IsWicketCssFileEmpty(RadioGroupParamPanel.class);
 
     private RadioGroup<T> group;
 
@@ -81,14 +77,9 @@ public class RadioGroupParamPanel<T extends Serializable> extends Panel implemen
     @Override
     public void renderHead(IHeaderResponse response) {
         super.renderHead(response);
-        // if the panel-specific CSS file contains actual css then have the browser load the css
-        if (!isCssEmpty) {
-            @SuppressWarnings("rawtypes")
-            Class<? extends RadioGroupParamPanel> scope = getClass();
-            String name = scope.getSimpleName() + ".css";
-            PackageResourceReference reference = new PackageResourceReference(scope, name);
-            response.render(CssHeaderItem.forReference(reference));
-        }
+        PackageResourceReference stylesheet =
+                new PackageResourceReference(RadioGroupParamPanel.class, "RadioGroupParamPanel.css");
+        response.render(CssHeaderItem.forReference(stylesheet));
     }
 
     /** ListView to dynamically generate the radios */
