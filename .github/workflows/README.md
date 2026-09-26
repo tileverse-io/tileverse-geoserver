@@ -10,7 +10,7 @@ and test plugins in the POM; `.mvn/jvm.config` adds the native-access flags
 ## `pr-validation.yml`
 
 Gates every pull request and every push to `main` and the release series
-branches (`3.0.x`-style names), ignoring `docs/**` and `**.md`. Three jobs:
+branches (`3.0.x`, `2.28.x`), ignoring `docs/**` and `**.md`. Three jobs:
 
 - **lint** (ubuntu): `make lint` - Spotless, SortPOM, and license-header checks.
 - **build** (ubuntu): `./mvnw verify -Pcoverage` (unit + integration tests),
@@ -33,8 +33,8 @@ Needs no secrets.
 ## `publish-snapshot.yml`
 
 After `Pull Request Validation` completes successfully on `main` (or on manual
-dispatch), deploys the branch's series snapshot (`3.1-SNAPSHOT` on main) to the
-Central snapshot repository.
+dispatch), deploys the branch's series snapshot (`2.28-SNAPSHOT` on this
+branch) to the Central snapshot repository.
 Skipped when the head commit message contains `[skip-publish]`.
 
 ## `publish-release.yml`
@@ -57,7 +57,7 @@ Triggered by either:
 ## `backport.yml`
 
 Backport automation in the GeoServer style. Label a pull request
-`backport 3.0.x` (one label per target branch) and, once it merges, the bot
+`backport 3.0.x` or `backport 2.28.x` (one label per target branch) and, once it merges, the bot
 opens the cherry-pick pull request against that branch; labeling an
 already-merged pull request works too. When the cherry-pick does not apply
 cleanly, the bot reports the failure on the original pull request and the

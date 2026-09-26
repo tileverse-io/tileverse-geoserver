@@ -70,39 +70,12 @@ plugin therefore loads only on a **Java 25 JVM started with `--enable-preview`**
 (plus the foreign-memory native-access flags parquetry uses). A Java 17
 GeoServer cannot load it. The deployment target is GeoServer Cloud on Java 25.
 
-## Manual verification with `jetty:run`
-
-The plugin is wired into the GeoServer web app through a `parquetry` Maven
-profile in the GeoServer source tree (`src/web/app/pom.xml`).
-
-1. Build and install parquetry locally:
-
-   ```bash
-   ./mvnw -pl :tileverse-geoserver-parquetry -am install
-   ```
-
-2. From the GeoServer checkout (branch with the `parquetry` profile), run the
-   web app on a Java 25 JVM:
-
-   ```bash
-   cd src/web/app
-   MAVEN_OPTS="--enable-preview --enable-native-access=ALL-UNNAMED" \
-     mvn jetty:run -Pparquetry
-   ```
-
-   Match the JVM arguments to parquetry's `.mvn/jvm.config`.
-
-3. In the GeoServer UI, go to Stores > Add new store. "Parquet" appears in
-   the vector data sources. Create a store with a `uri` pointing at a
-   GeoParquet file (local path or `s3://`, `gs://`, `https://`, etc., per the
-   tileverse storage backends), then publish a layer from it.
-
 ## Run embedded from an IDE (`StartGeoServer`)
 
 `src/test/java/io/tileverse/geoserver/parquetry/StartGeoServer.java` launches the
 full GeoServer web app, with this plugin on the classpath, inside an embedded
 Jetty. Run it from an IDE as a Java application (Run As > Java Application) for a
-quick debug loop. The test-scope `gs-web-app` + Jetty 12.1.8 dependencies host it;
+quick debug loop. The test-scope `gs-web-app` + Jetty 10.0.25 dependencies host it;
 none of them ship with the published plugin.
 
 A minimal `web.xml` is bundled under `src/test/resources/webapp`. **No GeoServer
@@ -119,8 +92,11 @@ VM arguments:
 ```
 
 GeoServer comes up at <http://localhost:8080/geoserver> (override the port with
-`-Djetty.port=...`); type `stop` in the console to shut down. Then add a
-"Parquet" store as in step 3 above.
+`-Djetty.port=...`); type `stop` in the console to shut down. Then go to
+Stores > Add new store: "Parquet" appears in the vector data sources. Create a
+store with a `uri` pointing at a GeoParquet file (local path or `s3://`,
+`gs://`, `https://`, etc., per the tileverse storage backends), then publish a
+layer from it.
 
 ## License
 

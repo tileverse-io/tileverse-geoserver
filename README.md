@@ -34,8 +34,9 @@ a gigabyte or two of heap.
   native-access flags, for the Parquetry plugin: `parquetry-core` is compiled
   with preview features, and a Java 17/21 GeoServer cannot load it. The
   `storage-web` module itself is plain Java 17.
-- **GeoServer 3.0.1 / GeoTools 35.0** (the `provided` versions this repo builds
-  against). The deployment target is GeoServer Cloud on Java 25.
+- **GeoServer 2.28.5 / GeoTools 34.5** (the `provided` versions this repo builds
+  against; this branch tracks the GeoServer 2.28 series). The deployment target
+  is GeoServer Cloud 2.28 on Java 25.
 - Maven (use the bundled `./mvnw`).
 
 ## Building the Parquetry plugin
@@ -60,8 +61,8 @@ unzip tileverse-geoserver-parquetry-<version>-plugin.zip -d "$GEOSERVER_HOME/web
 
 In the GeoServer UI, go to **Stores > Add new store**; "Parquet", "Iceberg",
 and "STAC" appear among the vector data sources. See
-[parquetry/README.md](parquetry/README.md) for the store-edit panels,
-embedded-Jetty development launcher, and `jetty:run` instructions.
+[parquetry/README.md](parquetry/README.md) for the store-edit panels and the
+embedded-Jetty development launcher.
 
 ## Demo
 
@@ -79,16 +80,17 @@ make demo-down   # stop and remove the containers
 ## Coordinates
 
 Published under the `io.tileverse.geoserver` group. Versions track the
-compatible GeoServer series: `3.1-SNAPSHOT` is the development build for
-GeoServer 3.1, and releases number the series independently (`3.1-1`, `3.1-2`,
+compatible GeoServer series: `2.28-SNAPSHOT` is the development build for
+GeoServer 2.28, and releases number the series independently (`2.28-1`, `2.28-2`,
 ...) because the plugins may release more than once against one GeoServer
-series. The `3.0.x` branch does the same for GeoServer 3.0.
+series. The `main` branch does the same for GeoServer 3.1, and `3.0.x` for
+GeoServer 3.0.
 
 ```xml
 <dependency>
   <groupId>io.tileverse.geoserver</groupId>
   <artifactId>tileverse-geoserver-parquetry</artifactId>
-  <version>3.1-SNAPSHOT</version>
+  <version>2.28-SNAPSHOT</version>
 </dependency>
 ```
 
