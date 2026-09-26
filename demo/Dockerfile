@@ -1,4 +1,4 @@
-# GeoServer 3.0 with the parquetry GeoParquet plugin, on Java 25 with --enable-preview.
+# GeoServer 2.28 with the parquetry GeoParquet plugin, on Java 25 with --enable-preview.
 #
 # Stock GeoServer images run Java 17/21 and cannot load the parquetry classes (they carry
 # preview bytecode). This image takes the official platform-independent GeoServer binary
@@ -10,7 +10,7 @@
 
 FROM eclipse-temurin:25
 
-ARG GEOSERVER_VERSION=3.0.1
+ARG GEOSERVER_VERSION=2.28.5
 
 # Proven Java 25 runtime options from GeoServer Cloud's images. Beyond parquetry's own
 # --enable-preview / --enable-native-access, GeoServer needs the java.desktop, java.naming

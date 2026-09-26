@@ -1,6 +1,6 @@
 # Parquet in GeoServer - demo
 
-GeoServer 3.0 serving [Natural Earth](https://www.naturalearthdata.com/) as live WMS/WFS layers,
+GeoServer 2.28 serving [Natural Earth](https://www.naturalearthdata.com/) as live WMS/WFS layers,
 read through the parquetry plugin from three sources - [GeoParquet](https://geoparquet.org/) files,
 an [Apache Iceberg](https://iceberg.apache.org/) warehouse, and a [STAC](https://stacspec.org/)
 catalog - each served both from local disk and over S3/HTTP.

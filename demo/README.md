@@ -7,7 +7,7 @@ install, no manual configuration.
 
 ## What it is
 
-A self-contained Docker image: GeoServer 3.0 plus the parquetry GeoParquet plugin, on Java 25,
+A self-contained Docker image: GeoServer 2.28 plus the parquetry GeoParquet plugin, on Java 25,
 plus a bundled `s3proxy` S3 emulator. Two workspaces (mirroring GeoServer's stock `ne` workspace,
 but reading GeoParquet) are baked in. Working layers are served the moment the stack boots:
 
@@ -109,7 +109,7 @@ own data, drop GeoParquet files in `data/ne/` and adjust the `ne` datastore unde
 - `make geoserver-plugins` runs `./mvnw -pl :tileverse-geoserver-parquetry -Passembly package`, producing the
   standard GeoServer-plugin zip (the plugin jar plus its runtime dependencies; libraries GeoServer
   already ships are excluded). The demo targets stage a copy at `build/plugin.zip`.
-- The `Dockerfile` downloads the official GeoServer 3.0 platform-independent binary, drops the old
+- The `Dockerfile` downloads the official GeoServer 2.28 platform-independent binary, drops the old
   bundled Marlin renderer (incompatible with JDK 24+), unzips the plugin into `WEB-INF/lib`, and
   bakes in the preconfigured `parquetry` workspace and the GeoParquet data.
 - GeoServer runs on Java 25 with the runtime options proven by GeoServer Cloud
