@@ -58,21 +58,17 @@
     <!-- GeoServer supplies the WFS service at runtime; the output formats register against its Response contract. -->
     <dependency>
       <groupId>org.geoserver</groupId>
-      <artifactId>gs-wfs-core</artifactId>
+      <artifactId>gs-wfs</artifactId>
       <scope>provided</scope>
     </dependency>
     <!--
-      GeoServer/GeoTools already ship these; override their transitive compile scope to provided so the
-      plugin assembly does not duplicate them in WEB-INF/lib (JTS comes from GeoTools, Jackson 3 from gs-main).
+      GeoTools already ships JTS; override its transitive compile scope to provided to keep the plugin assembly from
+      duplicating it in WEB-INF/lib. Jackson 3 stays bundled: GeoServer 2.28 ships Jackson 2 only, and the two
+      coexist.
     -->
     <dependency>
       <groupId>org.locationtech.jts</groupId>
       <artifactId>jts-core</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>tools.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
       <scope>provided</scope>
     </dependency>
 
@@ -86,20 +82,8 @@
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- WicketTester renders an isolated GroupedParamPanel to check its markup and header show/hide. -->
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-tester</artifactId>
-      <scope>test</scope>
-    </dependency>
 
-    <!-- The WFS 1.x service that dispatches harness GetFeature requests. -->
-    <dependency>
-      <groupId>org.geoserver</groupId>
-      <artifactId>gs-wfs1_x</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <!-- WFS test-support harness classes (WFSTestSupport, WFS1XTestSupport, GeoServerSystemTestSupport). -->
+    <!-- WFS test-support harness classes (WFSTestSupport, GeoServerSystemTestSupport). -->
     <dependency>
       <groupId>org.geoserver</groupId>
       <artifactId>gs-main</artifactId>
@@ -108,13 +92,7 @@
     </dependency>
     <dependency>
       <groupId>org.geoserver</groupId>
-      <artifactId>gs-wfs-core</artifactId>
-      <classifier>tests</classifier>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.geoserver</groupId>
-      <artifactId>gs-wfs1_x</artifactId>
+      <artifactId>gs-wfs</artifactId>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -132,15 +110,20 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
-      <version>7.0.7</version>
+      <version>5.3.39</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- spring-test's servlet mocks and the GeoServer harness need the javax servlet API on the test classpath. -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
       <scope>test</scope>
     </dependency>
     <!--
       GeoServerSystemTestSupport and its ancestors reach into these three libraries (XML comparison, HTML assertions,
       polling assertions); none flow transitively through the gs-main-tests jar. Without them on the classpath, JUnit
       vintage's reflective method discovery throws NoClassDefFoundError on the harness base classes. Versions match
-      the pins in GeoServer's own parent POM (which every GeoServer module inherits these from directly; this plugin
-      does not).
+      the pins in GeoServer 2.28's own parent POM (inherited directly by every GeoServer module, not by this plugin).
     -->
     <dependency>
       <groupId>xmlunit</groupId>
@@ -151,20 +134,13 @@
     <dependency>
       <groupId>org.jsoup</groupId>
       <artifactId>jsoup</artifactId>
-      <version>1.23.1</version>
+      <version>1.18.3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.awaitility</groupId>
       <artifactId>awaitility</artifactId>
-      <version>4.3.0</version>
-      <scope>test</scope>
-    </dependency>
-    <!-- Used by GeoServerSystemTestSupport. -->
-    <dependency>
-      <groupId>org.apache.httpcomponents.client5</groupId>
-      <artifactId>httpclient5</artifactId>
-      <version>5.4.4</version>
+      <version>4.2.2</version>
       <scope>test</scope>
     </dependency>
     <!-- Read Arrow IPC responses back in output-format tests. -->
@@ -192,19 +168,16 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
-      <version>${jetty.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty.ee10</groupId>
-      <artifactId>jetty-ee10-webapp</artifactId>
-      <version>${jetty.version}</version>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-webapp</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty.ee10</groupId>
-      <artifactId>jetty-ee10-servlet</artifactId>
-      <version>${jetty.version}</version>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
