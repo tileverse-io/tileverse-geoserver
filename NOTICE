@@ -17,3 +17,11 @@ License, version 2 or later, Copyright Open Source Geospatial Foundation:
     (adapted from PMTilesDataStoreEditPanel).
 
 (https://github.com/geoserver/geoserver)
+
+-----------------------------------------------------------------------
+
+This project ships one file from Select2 (https://select2.org), licensed under
+the MIT License, Copyright Kevin Brown, Igor Vaynberg, and Select2 contributors:
+the English language script dist/js/i18n/en.js of Select2 4.1.0-rc.0, packaged
+under org/wicketstuff/select2/res/js/i18n because wicketstuff-select2 9.23.0
+renders it from that package without shipping it.
