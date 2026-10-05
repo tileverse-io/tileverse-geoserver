@@ -31,7 +31,9 @@ import org.geotools.api.feature.simple.SimpleFeature;
 import org.geotools.api.feature.simple.SimpleFeatureType;
 import org.geotools.api.feature.type.AttributeDescriptor;
 import org.geotools.data.simple.SimpleFeatureIterator;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -39,7 +41,7 @@ import io.tileverse.parquetry.catalog.CatalogOptions;
 import io.tileverse.parquetry.catalog.FilesetCatalog;
 import io.tileverse.parquetry.geotools.data.CatalogDataStore;
 import io.tileverse.parquetry.geotools.parquet.GeoParquetDataStore;
-import io.tileverse.parquetry.io.LocalFileSource;
+import io.tileverse.parquetry.io.FileSource;
 
 /**
  * Exercises the {@code geoparquet} WFS GetFeature output format end to end: request handling, format_options plumbing,
@@ -49,6 +51,9 @@ import io.tileverse.parquetry.io.LocalFileSource;
 public class GeoParquetOutputFormatIT extends WFSTestSupport {
 
     private static final String READBACK_DATASET_NAME = "readback";
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
     public void getFeatureProducesAReadableGeoParquetFile() throws Exception {
@@ -153,23 +158,14 @@ public class GeoParquetOutputFormatIT extends WFSTestSupport {
 
     private static CatalogDataStore openReadBackStore(Path file) {
         FilesetCatalog catalog = FilesetCatalog.open(
-                LocalFileSource.file(file),
+                FileSource.file(file),
                 CatalogOptions.builder().datasetName(READBACK_DATASET_NAME).build());
         return new GeoParquetDataStore(catalog);
     }
 
-    /**
-     * Writes the response body to a file in a directory of its own, rather than directly under the shared system temp
-     * root: {@link io.tileverse.parquetry.io.LocalFileSource#file(Path)} lists its parent directory to open the
-     * dataset, and the system temp root also holds unrelated directories other processes own, some unreadable to this
-     * JVM.
-     */
-    private static Path writeToTempFile(MockHttpServletResponse response) throws IOException {
-        Path directory = Files.createTempDirectory("geoparquet-output-format-it-");
-        directory.toFile().deleteOnExit();
-        Path file = directory.resolve("output.parquet");
+    private Path writeToTempFile(MockHttpServletResponse response) throws IOException {
+        Path file = temporaryFolder.newFile("output.parquet").toPath();
         Files.write(file, response.getContentAsByteArray());
-        file.toFile().deleteOnExit();
         return file;
     }
 

@@ -39,6 +39,12 @@
       <groupId>io.tileverse.parquetry</groupId>
       <artifactId>parquetry-arrow</artifactId>
     </dependency>
+    <!-- The S3/Azure/GCS providers; runtime only, bundled by the plugin zip. -->
+    <dependency>
+      <groupId>io.tileverse.storage</groupId>
+      <artifactId>tileverse-storage-all</artifactId>
+      <scope>runtime</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.geoserver</groupId>
