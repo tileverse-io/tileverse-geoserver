@@ -47,9 +47,10 @@ public abstract class StorageAwareCoverageStoreEditPanel extends StoreEditPanel 
         IModel formModel = storeEditForm.getModel();
         IModel<Map<String, Serializable>> connectionParameters =
                 new PropertyModel<>(formModel, CONNECTION_PARAMETERS_PROPERTY);
-        add(urlPanel(formModel));
+        IModel<String> url = new PropertyModel<>(formModel, URL_PROPERTY);
+        add(urlPanel(url));
         add(new StorageParamsPanel(
-                "storageParams", connectionParameters, BackendSelection.SINGLE_PROVIDER, cachingParameters()));
+                "storageParams", connectionParameters, url, BackendSelection.SINGLE_PROVIDER, cachingParameters()));
     }
 
     /** Whether to show the caching parameters; a store enforcing its own caching policy returns false. */
@@ -60,9 +61,7 @@ public abstract class StorageAwareCoverageStoreEditPanel extends StoreEditPanel 
     /** The resource key of the URL field's placeholder, hinting at the locations accepted by the store. */
     protected abstract String urlPlaceholderKey();
 
-    @SuppressWarnings("unchecked")
-    private TextParamPanel<String> urlPanel(IModel formModel) {
-        IModel<String> urlModel = new PropertyModel<>(formModel, URL_PROPERTY);
+    private TextParamPanel<String> urlPanel(IModel<String> urlModel) {
         IModel<String> label = new ResourceModel("url", "URL");
         TextParamPanel<String> panel =
                 new TextParamPanel<>("urlPanel", urlModel, label, true, new StorageUriValidator());

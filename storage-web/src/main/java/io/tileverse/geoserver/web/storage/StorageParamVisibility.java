@@ -53,6 +53,15 @@ public final class StorageParamVisibility {
         return selectedGroups.contains(group);
     }
 
+    /**
+     * Whether {@code paramKey} belongs to a backend group absent from {@code selectedGroups}. Always false for the keys
+     * outside the backend groups: caching, batch, {@code storage.provider} and the non-storage ones.
+     */
+    public static boolean belongsToUnselectedBackend(String paramKey, Set<String> selectedGroups) {
+        String group = groupOf(paramKey);
+        return BACKEND_GROUPS.contains(group) && !selectedGroups.contains(group);
+    }
+
     /** In display order: {@code [http, s3, gcs, azure, file]} with the standard providers. */
     public static List<String> selectableGroups() {
         return StorageProvider.getProviders().stream()
