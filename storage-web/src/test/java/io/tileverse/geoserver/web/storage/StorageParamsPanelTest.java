@@ -13,6 +13,7 @@
 package io.tileverse.geoserver.web.storage;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -322,9 +323,280 @@ class StorageParamsPanelTest {
         assertThat(params.get("storage.http.timeout-millis")).isEqualTo(5000);
     }
 
+    @Test
+    void anUntouchedSubmitKeepsPathStyleAccessOnForACustomS3Endpoint() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.s3.endpoint", "http://localhost:9000");
+        renderPanel(BackendSelection.SINGLE_PROVIDER, false);
+
+        FormTester form = tester.newFormTester("form");
+        form.submit();
+
+        tester.assertNoErrorMessage();
+        assertThat(params)
+                .containsEntry("storage.s3.force-path-style", Boolean.TRUE)
+                .containsEntry("storage.s3.requester-pays", Boolean.FALSE)
+                .containsEntry("storage.s3.anonymous", Boolean.FALSE);
+    }
+
+    @Test
+    void openingSeedsTheDeclaredDefaultsOfTheShownParametersOnly() {
+        params.put(PROVIDER, "s3");
+
+        renderPanel(BackendSelection.SINGLE_PROVIDER, true);
+
+        assertThat(params)
+                .containsOnly(
+                        entry(PROVIDER, "s3"),
+                        entry("storage.caching.enabled", Boolean.FALSE),
+                        entry("storage.s3.force-path-style", Boolean.TRUE),
+                        entry("storage.s3.requester-pays", Boolean.FALSE),
+                        entry("storage.s3.anonymous", Boolean.FALSE));
+    }
+
+    @Test
+    void aStoredValueWinsOverTheDeclaredDefault() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.s3.force-path-style", Boolean.FALSE);
+
+        renderPanel(BackendSelection.SINGLE_PROVIDER, true);
+
+        assertThat(params).containsEntry("storage.s3.force-path-style", Boolean.FALSE);
+    }
+
+    @Test
+    void seedsADefaultInTheFormWrittenByItsField() {
+        params.put(PROVIDER, "azure");
+
+        renderPanel(BackendSelection.SINGLE_PROVIDER, false);
+
+        assertThat(params)
+                .containsOnly(
+                        entry(PROVIDER, "azure"),
+                        entry("storage.azure.anonymous", Boolean.FALSE),
+                        entry("storage.azure.max-retries", 3),
+                        entry("storage.azure.retry-delay", "PT4S"),
+                        entry("storage.azure.max-retry-delay", "PT2M"),
+                        entry("storage.azure.try-timeout", "PT1M"));
+    }
+
+    @Test
+    void seedsNoCachingDefaultForTheLocalFileProvider() {
+        params.put(PROVIDER, "file");
+
+        renderPanel(BackendSelection.SINGLE_PROVIDER, true);
+
+        assertThat(params).containsOnly(entry(PROVIDER, "file"), entry("storage.file.idle-timeout", "PT1M"));
+    }
+
+    @Test
+    void seedsNothingBeforeAProviderIsSelected() {
+        renderPanel(BackendSelection.SINGLE_PROVIDER, true);
+
+        assertThat(params).isEmpty();
+    }
+
+    @Test
+    void multipleBackendsSeedsTheDefaultsOfTheBackendsPresentInTheStore() {
+        params.put("storage.http.bearer-token", "t");
+
+        renderPanel(BackendSelection.MULTIPLE_BACKENDS, true);
+
+        assertThat(params)
+                .containsOnly(
+                        entry("storage.http.bearer-token", "t"),
+                        entry("storage.http.timeout-millis", 5000),
+                        entry("storage.caching.enabled", Boolean.FALSE));
+    }
+
+    @Test
+    void multipleBackendsSeedsNothingWithNoBackendChecked() {
+        renderPanel(BackendSelection.MULTIPLE_BACKENDS, true);
+
+        assertThat(params).isEmpty();
+    }
+
+    @Test
+    void switchingTheProviderSeedsItsDefaultsAndKeepsThePreviousBackendValues() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.s3.region", "us-east-1");
+        renderPanel(BackendSelection.SINGLE_PROVIDER, false);
+        int http = StorageParams.providerIds().indexOf("http");
+
+        FormTester form = tester.newFormTester("form");
+        form.select("panel:selector:group", http);
+        tester.executeAjaxEvent("form:panel:selector:group", "change");
+
+        assertThat(params)
+                .containsEntry("storage.http.timeout-millis", 5000)
+                .containsEntry("storage.s3.region", "us-east-1")
+                .containsEntry("storage.s3.force-path-style", Boolean.TRUE);
+    }
+
+    @Test
+    void checkingABackendSeedsItsDefaults() {
+        renderPanel(BackendSelection.MULTIPLE_BACKENDS, false);
+        int gcs = StorageParamVisibility.selectableGroups().indexOf("gcs");
+
+        FormTester form = tester.newFormTester("form");
+        form.selectMultiple("panel:selector:group", new int[] {gcs});
+        tester.executeAjaxEvent("form:panel:selector:group", "change");
+
+        assertThat(params).containsOnly(entry("storage.gcs.anonymous", Boolean.FALSE));
+    }
+
+    @Test
+    void aSubmitDropsTheParametersOfUnselectedBackends() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.s3.region", "us-east-1");
+        params.put("storage.azure.account-key", "k");
+        params.put("storage.http.username", "u");
+        renderPanel(BackendSelection.SINGLE_PROVIDER, false);
+
+        tester.newFormTester("form").submit();
+
+        tester.assertNoErrorMessage();
+        assertThat(params)
+                .containsEntry("storage.s3.region", "us-east-1")
+                .doesNotContainKeys("storage.azure.account-key", "storage.http.username");
+    }
+
+    @Test
+    void aSubmitKeepsTheParametersOutsideTheBackendGroups() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.batch.max-fetch", 1024);
+        params.put("storage.caching.enabled", Boolean.TRUE);
+        params.put("namespace", "http://example.com");
+        renderPanel(BackendSelection.SINGLE_PROVIDER, true);
+
+        tester.newFormTester("form").submit();
+
+        tester.assertNoErrorMessage();
+        assertThat(params)
+                .containsEntry(PROVIDER, "s3")
+                .containsEntry("storage.batch.max-fetch", 1024)
+                .containsEntry("storage.caching.enabled", Boolean.TRUE)
+                .containsEntry("namespace", "http://example.com");
+    }
+
+    @Test
+    void submittingAfterSwitchingTheProviderDropsThePreviousBackend() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.s3.region", "us-east-1");
+        renderPanel(BackendSelection.SINGLE_PROVIDER, false);
+        int http = StorageParams.providerIds().indexOf("http");
+        FormTester selecting = tester.newFormTester("form");
+        selecting.select("panel:selector:group", http);
+        tester.executeAjaxEvent("form:panel:selector:group", "change");
+
+        tester.newFormTester("form").submit();
+
+        tester.assertNoErrorMessage();
+        assertThat(params)
+                .containsEntry(PROVIDER, "http")
+                .containsEntry("storage.http.timeout-millis", 5000)
+                .doesNotContainKeys(
+                        "storage.s3.region",
+                        "storage.s3.force-path-style",
+                        "storage.s3.requester-pays",
+                        "storage.s3.anonymous");
+    }
+
+    @Test
+    void aSubmitWithNoProviderSelectedDropsTheBackendParameters() {
+        params.put("storage.s3.region", "us-east-1");
+        renderPanel(BackendSelection.SINGLE_PROVIDER, false);
+
+        tester.newFormTester("form").submit();
+
+        tester.assertNoErrorMessage();
+        assertThat(params).doesNotContainKey("storage.s3.region");
+    }
+
+    @Test
+    void submittingAfterUncheckingABackendDropsItsParameters() {
+        params.put("storage.s3.region", "us-east-1");
+        params.put("storage.http.bearer-token", "t");
+        renderPanel(BackendSelection.MULTIPLE_BACKENDS, false);
+        int http = StorageParamVisibility.selectableGroups().indexOf("http");
+        FormTester selecting = tester.newFormTester("form");
+        selecting.selectMultiple("panel:selector:group", new int[] {http}, true);
+        tester.executeAjaxEvent("form:panel:selector:group", "change");
+
+        tester.newFormTester("form").submit();
+
+        tester.assertNoErrorMessage();
+        assertThat(params)
+                .containsEntry("storage.http.bearer-token", "t")
+                .containsEntry("storage.http.timeout-millis", 5000)
+                .doesNotContainKeys(
+                        "storage.s3.region",
+                        "storage.s3.force-path-style",
+                        "storage.s3.requester-pays",
+                        "storage.s3.anonymous");
+    }
+
+    @Test
+    void aStoreSavedWithoutAProviderOpensOnTheBackendSelectedByItsUrl() {
+        params.put("storage.s3.region", "us-east-1");
+
+        StorageParamsPanel panel = renderPanel("s3://bucket/key.tif", BackendSelection.SINGLE_PROVIDER, false);
+
+        assertThat(params).containsEntry(PROVIDER, "s3").containsEntry("storage.s3.region", "us-east-1");
+        assertThat(panel.rowFor("storage.s3.region").isVisible()).isTrue();
+    }
+
+    @Test
+    void savingAStoreOpenedWithoutAProviderKeepsItsBackendParameters() {
+        params.put("storage.s3.region", "us-east-1");
+        params.put("storage.s3.endpoint", "http://localhost:9000");
+        renderPanel("s3://bucket/key.tif", BackendSelection.SINGLE_PROVIDER, false);
+
+        tester.newFormTester("form").submit();
+
+        tester.assertNoErrorMessage();
+        assertThat(params)
+                .containsEntry(PROVIDER, "s3")
+                .containsEntry("storage.s3.region", "us-east-1")
+                .containsEntry("storage.s3.endpoint", "http://localhost:9000");
+    }
+
+    @Test
+    void aStoredProviderWinsOverTheUrl() {
+        params.put(PROVIDER, "s3");
+
+        renderPanel("https://bucket.s3.amazonaws.com/key.tif", BackendSelection.SINGLE_PROVIDER, false);
+
+        assertThat(params).containsEntry(PROVIDER, "s3");
+    }
+
+    @Test
+    void aStoreWithoutAUrlOpensWithNothingSelected() {
+        renderPanel(null, BackendSelection.SINGLE_PROVIDER, false);
+
+        assertThat(params).isEmpty();
+    }
+
+    @Test
+    void multipleBackendsNeverStoreAProvider() {
+        renderPanel("s3://bucket/key.tif", BackendSelection.MULTIPLE_BACKENDS, false);
+
+        assertThat(params).doesNotContainKey(PROVIDER);
+    }
+
     private StorageParamsPanel renderPanel(BackendSelection selection, boolean cachingParameters) {
         Form<Void> form = new Form<>("form");
         StorageParamsPanel panel = new StorageParamsPanel("panel", paramsModel, selection, cachingParameters);
+        form.add(panel);
+        tester.startComponentInPage(form);
+        return panel;
+    }
+
+    private StorageParamsPanel renderPanel(String location, BackendSelection selection, boolean cachingParameters) {
+        Form<Void> form = new Form<>("form");
+        IModel<String> locationModel = Model.of(location);
+        StorageParamsPanel panel =
+                new StorageParamsPanel("panel", paramsModel, locationModel, selection, cachingParameters);
         form.add(panel);
         tester.startComponentInPage(form);
         return panel;

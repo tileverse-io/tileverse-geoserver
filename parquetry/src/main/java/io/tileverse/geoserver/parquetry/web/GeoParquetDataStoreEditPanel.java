@@ -12,11 +12,16 @@
  */
 package io.tileverse.geoserver.parquetry.web;
 
+import java.util.List;
+
 import org.apache.wicket.markup.html.form.Form;
 import org.geoserver.catalog.DataStoreInfo;
 
 import io.tileverse.geoserver.web.storage.StorageAwareDataStoreEditPanel;
 import io.tileverse.geoserver.web.storage.StorageParamsPanel.BackendSelection;
+
+import io.tileverse.parquetry.geotools.iceberg.IcebergDataStoreFactory;
+import io.tileverse.parquetry.geotools.parquet.GeoParquetDataStoreFactory;
 
 /**
  * A store edit panel for the GeoParquet DataStore. The shared storage section renders the provider selector and the
@@ -28,7 +33,11 @@ import io.tileverse.geoserver.web.storage.StorageParamsPanel.BackendSelection;
 @SuppressWarnings({"serial", "java:S110"})
 public class GeoParquetDataStoreEditPanel extends StorageAwareDataStoreEditPanel {
 
+    /** The URL parameters of the two store types edited by this panel. */
+    private static final List<String> LOCATION_KEYS =
+            List.of(GeoParquetDataStoreFactory.GEOPARQUET_URI.key, IcebergDataStoreFactory.ICEBERG_URI.key);
+
     public GeoParquetDataStoreEditPanel(String componentId, Form<DataStoreInfo> storeEditForm) {
-        super(componentId, storeEditForm, BackendSelection.SINGLE_PROVIDER, false);
+        super(componentId, storeEditForm, BackendSelection.SINGLE_PROVIDER, false, LOCATION_KEYS);
     }
 }
