@@ -22,10 +22,21 @@ toggle (GeoParquet) or one checkbox per backend (STAC), then each backend's
 fields under a header, in the provider's declared order, showing only the
 selected backends. Booleans render as checkboxes, the AWS region as a
 searchable dropdown, retry delays as duration widgets, and secrets (keys,
-tokens, passwords) are masked. The provider is auto-detected from the URI when
-left unset; local files need no provider selection. GeoParquet does not expose
-the memory-cache toggle, and saving a store drops a previously stored one: the
-engine applies its own caching default.
+tokens, passwords) are masked. GeoParquet does not expose the memory-cache
+toggle, and saving a store drops a previously stored one: the engine applies
+its own caching default.
+
+With no provider selected, the URL scheme selects the backend: `s3://`,
+`gs://`, `az://`, `abfs(s)://`, a local path, and plain HTTP for `http(s)://`.
+Selecting a provider overrides that, for example to read an `https://` URL
+through the S3 backend. A store saved without a provider, over REST for
+instance, opens with the backend of its URL selected.
+
+A store keeps the parameters of its selected backends only. The panel stores
+their declared defaults as soon as their fields show (S3 path-style access on,
+for example), keeping the store stable across a change of an engine default,
+and saving the store drops the parameters of the other backends. With no
+backend selected, no backend parameter is kept.
 
 ## WFS output formats
 
