@@ -50,6 +50,9 @@ public abstract class StorageAwareDataStoreEditPanel extends DefaultDataStoreEdi
     private final BackendSelection selection;
     private final boolean cachingParameters;
 
+    /** The connection parameters able to hold the store URL, one per store type edited by the panel. */
+    private final List<String> locationKeys;
+
     /**
      * Created once, for the first {@code storage.*} parameter; relies on GeoServer's parameter list reusing its items,
      * since a repopulated list would give that parameter a placeholder and drop the section.
@@ -59,14 +62,29 @@ public abstract class StorageAwareDataStoreEditPanel extends DefaultDataStoreEdi
     /** Stand-ins for the other {@code storage.*} parameters. */
     private final List<Component> storagePlaceholders = new ArrayList<>();
 
+    /** A panel reading no store URL: a single-provider store opens on its stored provider only. */
     protected StorageAwareDataStoreEditPanel(
             String componentId,
             Form<DataStoreInfo> storeEditForm,
             BackendSelection selection,
             boolean cachingParameters) {
+        this(componentId, storeEditForm, selection, cachingParameters, List.of());
+    }
+
+    /**
+     * @param locationKeys the connection parameters able to hold the store URL, one per store type edited by the panel;
+     *     a single-provider store naming no provider opens on the backend selected by that URL
+     */
+    protected StorageAwareDataStoreEditPanel(
+            String componentId,
+            Form<DataStoreInfo> storeEditForm,
+            BackendSelection selection,
+            boolean cachingParameters,
+            List<String> locationKeys) {
         super(componentId, storeEditForm);
         this.selection = selection;
         this.cachingParameters = cachingParameters;
+        this.locationKeys = List.copyOf(locationKeys);
     }
 
     @Override
@@ -120,10 +138,22 @@ public abstract class StorageAwareDataStoreEditPanel extends DefaultDataStoreEdi
             return super.getInputComponent(componentId, paramsModel, paramMetadata);
         }
         if (storageSection == null) {
-            storageSection = new StorageParamsPanel(componentId, paramsModel, selection, cachingParameters);
+            IModel<String> location = () -> locationIn(paramsModel.getObject());
+            storageSection = new StorageParamsPanel(componentId, paramsModel, location, selection, cachingParameters);
             return storageSection;
         }
         return placeholder(componentId);
+    }
+
+    /** {@code null} when the store holds none of the location parameters. */
+    private String locationIn(Map<String, Serializable> connectionParameters) {
+        for (String key : locationKeys) {
+            Serializable location = connectionParameters.get(key);
+            if (location != null) {
+                return location.toString();
+            }
+        }
+        return null;
     }
 
     private static boolean isStorageParam(String paramName) {
@@ -138,8 +168,8 @@ public abstract class StorageAwareDataStoreEditPanel extends DefaultDataStoreEdi
     }
 
     /**
-     * Leaves an options-bearing parameter empty until the user picks one, and never seeds a {@code storage.*} default:
-     * stored for an unselected backend or a hidden parameter, it would override the engine's own default.
+     * Leaves an options-bearing parameter empty until the user picks one. The {@code storage.*} defaults belong to the
+     * {@link StorageParamsPanel}, storing them for the selected backends only.
      */
     @Override
     protected void applyParamDefault(ParamInfo paramInfo, StoreInfo info) {

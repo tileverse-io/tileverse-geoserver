@@ -15,15 +15,12 @@ package io.tileverse.geoserver.web.storage;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Locale;
-import java.util.Properties;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
-
-import io.tileverse.storage.StorageConfig;
-import io.tileverse.storage.StorageFactory;
 
 /**
  * Checks, without any I/O, that a store URL resolves to a tileverse-storage provider. The provider registry is not
@@ -53,7 +50,8 @@ public class StorageUriValidator implements IValidator<String> {
         if (scheme == null || isRegistryExempt(scheme)) {
             return true;
         }
-        return resolvesToAProvider(location);
+        Optional<String> providerId = StorageParams.providerSelectedBy(location);
+        return providerId.isPresent();
     }
 
     private static URI tryParse(String location) {
@@ -66,16 +64,5 @@ public class StorageUriValidator implements IValidator<String> {
 
     private static boolean isRegistryExempt(String scheme) {
         return REGISTRY_EXEMPT_SCHEMES.contains(scheme.toLowerCase(Locale.ROOT));
-    }
-
-    private static boolean resolvesToAProvider(String location) {
-        Properties propsWithUri = new Properties();
-        propsWithUri.setProperty(StorageConfig.URI_KEY, location);
-        try {
-            StorageFactory.findProvider(StorageConfig.fromProperties(propsWithUri));
-            return true;
-        } catch (RuntimeException e) {
-            return false;
-        }
     }
 }
