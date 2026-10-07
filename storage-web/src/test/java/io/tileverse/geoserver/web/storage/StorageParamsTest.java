@@ -15,14 +15,45 @@ package io.tileverse.geoserver.web.storage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import io.tileverse.storage.StorageConfig;
 import io.tileverse.storage.StorageParameter;
 import io.tileverse.storage.spi.StorageProvider;
 
 class StorageParamsTest {
+
+    @ParameterizedTest
+    @MethodSource("locationsWithTheirBackend")
+    void theUrlAloneSelectsTheBackend(String location, String providerId) {
+        assertThat(StorageParams.providerSelectedBy(location)).contains(providerId);
+    }
+
+    private static Stream<Arguments> locationsWithTheirBackend() {
+        return Stream.of(
+                Arguments.of("s3://bucket/key.tif", "s3"),
+                Arguments.of("gs://bucket/key.tif", "gcs"),
+                Arguments.of("az://container/blob.tif", "azure"),
+                Arguments.of("abfss://fs@account.dfs.core.windows.net/x.tif", "azure-datalake"),
+                Arguments.of("https://bucket.s3.amazonaws.com/key.tif", "http"),
+                Arguments.of("/data/x.tif", "file"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("locationsWithoutBackend")
+    void aBlankOrUnknownLocationSelectsNoBackend(String location) {
+        assertThat(StorageParams.providerSelectedBy(location)).isEmpty();
+    }
+
+    private static Stream<Arguments> locationsWithoutBackend() {
+        return Stream.of(
+                Arguments.of((String) null), Arguments.of(""), Arguments.of("  "), Arguments.of("notaurl://x"));
+    }
 
     @Test
     void cachingComesFirstThenBackendGroupsInDisplayOrder() {

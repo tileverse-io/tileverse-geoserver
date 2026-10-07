@@ -67,8 +67,8 @@ The two attribute-only tables have no geometry column and are published for WFS 
 
 Both workspaces publish the five Natural Earth layers as STAC collections. Each item's asset href
 is an absolute `s3://naturalearth/<layer>.parquet` URI, and the store resolves each asset through a
-Storage keyed on the asset's own container URI, with the backend auto-detected per URI - not
-relative to the catalog. The two workspaces demonstrate two auth patterns:
+Storage keyed on the asset's own container URI, with the backend selected by the scheme of each
+URI - not relative to the catalog. The two workspaces demonstrate two auth patterns:
 
 - `stac-json` reads a static JSON catalog over HTTP from the bundled `web` (nginx) service
   (`catalog.json`, per-collection `collection.json`, and item documents), while its GeoParquet
@@ -127,7 +127,7 @@ credentials). A store points at a single `.parquet` file, or at a directory of f
 | key | meaning |
 |---|---|
 | `geoparquet` | the dataset URI: `file:///path/to/file.parquet` or `s3://bucket/key.parquet` |
-| `storage.provider` | `s3`, `azure`, `gcs`, `http`, or `file` (auto-detected from the URI when unset) |
+| `storage.provider` | `s3`, `azure`, `gcs`, `http`, or `file` (selected by the URI scheme when unset; an `http(s)://` URI is read as plain HTTP) |
 | `storage.s3.region` | AWS region (required for S3, including S3-compatible services) |
 | `storage.s3.endpoint` | only for S3-compatible services (MinIO, Cloudflare R2, the bundled s3proxy) |
 | `storage.s3.force-path-style` | `true` for most S3-compatible services |

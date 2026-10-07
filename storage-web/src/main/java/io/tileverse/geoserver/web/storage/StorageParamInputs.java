@@ -16,6 +16,7 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -38,6 +39,25 @@ final class StorageParamInputs {
         Panel input = widgetFor(connectionParameters, parameter);
         addTooltip(input, parameter.description());
         return input;
+    }
+
+    /**
+     * The declared default in the form written by the parameter's field: typed behind a checkbox or a number field, as
+     * text behind the other fields, a duration as its ISO-8601 text.
+     */
+    static Optional<Serializable> storedDefault(StorageParameter<?> parameter) {
+        Optional<?> declaredDefault = parameter.defaultValue();
+        return declaredDefault.map(StorageParamInputs::storedForm);
+    }
+
+    private static Serializable storedForm(Object declaredDefault) {
+        if (declaredDefault instanceof Boolean flag) {
+            return flag;
+        }
+        if (declaredDefault instanceof Number number) {
+            return number;
+        }
+        return declaredDefault.toString();
     }
 
     private static Panel widgetFor(

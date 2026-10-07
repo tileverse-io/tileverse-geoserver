@@ -17,8 +17,12 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 
+import io.tileverse.storage.StorageConfig;
+import io.tileverse.storage.StorageFactory;
 import io.tileverse.storage.StorageParameter;
 import io.tileverse.storage.spi.StorageProvider;
 
@@ -54,6 +58,24 @@ public final class StorageParams {
                 .map(StorageProvider::getId)
                 .sorted(ProviderDisplayOrder.comparator())
                 .toList();
+    }
+
+    /**
+     * The id of the provider serving {@code location} when a store names none: the URL scheme alone decides, as in
+     * {@link StorageFactory}. Empty for a blank location and for one served by no provider.
+     */
+    static Optional<String> providerSelectedBy(String location) {
+        if (location == null || location.isBlank()) {
+            return Optional.empty();
+        }
+        Properties locationOnly = new Properties();
+        locationOnly.setProperty(StorageConfig.URI_KEY, location);
+        try {
+            StorageProvider provider = StorageFactory.findProvider(StorageConfig.fromProperties(locationOnly));
+            return Optional.of(provider.getId());
+        } catch (RuntimeException servedByNoProvider) {
+            return Optional.empty();
+        }
     }
 
     /** Deduplicated by key because Azure Data Lake declares the Azure parameters too. */
