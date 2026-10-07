@@ -13,6 +13,7 @@
 package io.tileverse.geoserver.web.storage;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -117,6 +118,46 @@ class StorageAwareCoverageStoreEditPanelTest {
         CoverageStoreInfo submitted = submittedStoreInfo();
         assertThat(submitted.getURL()).isEqualTo("s3://bucket/key.tif");
         assertThat(submitted.getConnectionParameters()).containsEntry("storage.s3.region", "us-west-2");
+    }
+
+    @Test
+    void anUntouchedSubmitStoresTheDefaultsOfTheSelectedBackendOnly() {
+        Map<String, Serializable> connectionParameters = new HashMap<>();
+        connectionParameters.put(StorageConfig.PROVIDER_ID_KEY, "s3");
+        connectionParameters.put("storage.s3.endpoint", "http://localhost:9000");
+        connectionParameters.put("storage.azure.account-key", "stale");
+        CoverageStoreInfo storeInfo = newStore(connectionParameters);
+        storeInfo.setURL("s3://bucket/key.tif");
+        renderPanel(storeInfo);
+
+        tester.newFormTester(FORM_PATH).submit();
+
+        tester.assertNoErrorMessage();
+        assertThat(submittedStoreInfo().getConnectionParameters())
+                .containsOnly(
+                        entry(StorageConfig.PROVIDER_ID_KEY, "s3"),
+                        entry("storage.s3.endpoint", "http://localhost:9000"),
+                        entry("storage.s3.force-path-style", Boolean.TRUE),
+                        entry("storage.s3.requester-pays", Boolean.FALSE),
+                        entry("storage.s3.anonymous", Boolean.FALSE));
+    }
+
+    @Test
+    void aStoreSavedWithoutAProviderKeepsItsBackendParametersOnSave() {
+        Map<String, Serializable> connectionParameters = new HashMap<>();
+        connectionParameters.put("storage.s3.region", "us-west-2");
+        connectionParameters.put("storage.s3.endpoint", "http://localhost:9000");
+        CoverageStoreInfo storeInfo = newStore(connectionParameters);
+        storeInfo.setURL("s3://bucket/key.tif");
+        renderPanel(storeInfo);
+
+        tester.newFormTester(FORM_PATH).submit();
+
+        tester.assertNoErrorMessage();
+        assertThat(submittedStoreInfo().getConnectionParameters())
+                .containsEntry(StorageConfig.PROVIDER_ID_KEY, "s3")
+                .containsEntry("storage.s3.region", "us-west-2")
+                .containsEntry("storage.s3.endpoint", "http://localhost:9000");
     }
 
     private TestPanel renderPanel(CoverageStoreInfo storeInfo) {

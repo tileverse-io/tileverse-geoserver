@@ -17,14 +17,17 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
+import org.apache.wicket.markup.html.form.IFormModelUpdateListener;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.RepeatingView;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 
 import io.tileverse.storage.StorageConfig;
@@ -34,9 +37,16 @@ import io.tileverse.storage.StorageParameter;
  * The tileverse storage section of a store edit page, shared by the vector and raster store panels: a backend selector
  * and one row per {@code storage.*} parameter, grouped under a header per backend, showing only the selected backends'
  * rows.
+ *
+ * <p>A store keeps the parameters of its selected backends only: the section stores their declared defaults as soon as
+ * their rows show, and a submit drops the parameters of the other backends. A stored default keeps the store stable
+ * across a change of the engine's default.
+ *
+ * <p>A single-provider store naming no provider is served by the backend selected by its URL, and opens with that
+ * backend selected.
  */
 @SuppressWarnings("serial")
-public class StorageParamsPanel extends Panel {
+public class StorageParamsPanel extends Panel implements IFormModelUpdateListener {
 
     /** How the user selects the backends to show. */
     public enum BackendSelection {
@@ -62,12 +72,29 @@ public class StorageParamsPanel extends Panel {
     /** Keyed by parameter key, in render order. */
     private final Map<String, Component> rowsByKey = new LinkedHashMap<>();
 
+    /** Keyed by parameter key, in the form written by the parameter's field. */
+    private final Map<String, Serializable> declaredDefaults;
+
     /** Set only for {@link BackendSelection#MULTIPLE_BACKENDS}. */
     private CheckGroupParamPanel backendSelector;
 
+    /** A section for a store with no URL to read: a single-provider store opens on its stored provider only. */
     public StorageParamsPanel(
             String id,
             IModel<Map<String, Serializable>> connectionParameters,
+            BackendSelection selection,
+            boolean cachingParameters) {
+        this(id, connectionParameters, new Model<>(), selection, cachingParameters);
+    }
+
+    /**
+     * @param location the store URL, read once, when the panel opens; a single-provider store naming no provider opens
+     *     on the backend selected by it
+     */
+    public StorageParamsPanel(
+            String id,
+            IModel<Map<String, Serializable>> connectionParameters,
+            IModel<String> location,
             BackendSelection selection,
             boolean cachingParameters) {
         super(id);
@@ -76,9 +103,14 @@ public class StorageParamsPanel extends Panel {
         if (!cachingParameters) {
             dropStoredCachingSettings();
         }
+        if (selection == BackendSelection.SINGLE_PROVIDER) {
+            selectTheProviderOfTheLocationUnlessStored(location);
+        }
         List<StorageParameter<?>> parameters = StorageParams.orderedParameters(cachingParameters);
+        this.declaredDefaults = declaredDefaults(parameters);
         add(selector());
         add(rows(parameters));
+        seedDeclaredDefaults();
     }
 
     /** The backend groups whose rows show: the selected provider's groups, or the checked backends. */
@@ -96,6 +128,16 @@ public class StorageParamsPanel extends Panel {
         applyVisibility(null);
     }
 
+    /**
+     * Runs on a form submit, after the fields wrote their values; GeoServer's own save hook skips the raster store
+     * pages. Dropping the unselected backends here, not on a selection change, keeps their values while the user
+     * toggles the selector.
+     */
+    @Override
+    public void updateModel() {
+        dropParametersOfUnselectedBackends();
+    }
+
     /** The row rendering {@code key}, toggled with its backend group; null when the section omits the parameter. */
     public Component rowFor(String key) {
         return rowsByKey.get(key);
@@ -110,6 +152,12 @@ public class StorageParamsPanel extends Panel {
         ComponentVisibility.apply(rowsByKey, selectedGroups(), targetOrNull);
     }
 
+    private void dropParametersOfUnselectedBackends() {
+        Set<String> selectedGroups = selectedGroups();
+        Set<String> storedKeys = connectionParameters.getObject().keySet();
+        storedKeys.removeIf(key -> StorageParamVisibility.belongsToUnselectedBackend(key, selectedGroups));
+    }
+
     /** Nothing on the page could change a stored caching setting once its rows are hidden. */
     private void dropStoredCachingSettings() {
         connectionParameters.getObject().keySet().removeIf(StorageParamsPanel::isCachingKey);
@@ -117,6 +165,28 @@ public class StorageParamsPanel extends Panel {
 
     private static boolean isCachingKey(String key) {
         return CACHING_GROUP.equals(StorageParamVisibility.groupOf(key));
+    }
+
+    /**
+     * A store saved without a provider is served by the backend selected by its URL. Selecting it here shows the
+     * parameters in effect and keeps a save from dropping them.
+     */
+    private void selectTheProviderOfTheLocationUnlessStored(IModel<String> location) {
+        Map<String, Serializable> stored = connectionParameters.getObject();
+        if (stored.get(PROVIDER_KEY) != null) {
+            return;
+        }
+        Optional<String> providerId = StorageParams.providerSelectedBy(location.getObject());
+        providerId.ifPresent(id -> stored.put(PROVIDER_KEY, id));
+    }
+
+    private static Map<String, Serializable> declaredDefaults(List<StorageParameter<?>> parameters) {
+        Map<String, Serializable> defaults = new LinkedHashMap<>();
+        for (StorageParameter<?> parameter : parameters) {
+            Optional<Serializable> storedDefault = StorageParamInputs.storedDefault(parameter);
+            storedDefault.ifPresent(value -> defaults.put(parameter.key(), value));
+        }
+        return defaults;
     }
 
     private Component selector() {
@@ -132,7 +202,7 @@ public class StorageParamsPanel extends Panel {
         RadioGroupParamPanel<String> panel = new RadioGroupParamPanel<>(
                 SELECTOR_ID, label, providerIdModel(), StorageParams.providerIds(), StorageParamsPanel::providerLabel);
         panel.choiceTooltips(StorageParamsPanel::providerTooltip);
-        panel.getFormComponent().add(reapplyVisibilityOnChange());
+        panel.getFormComponent().add(showSelectedBackendsOnChange());
         return panel;
     }
 
@@ -147,17 +217,32 @@ public class StorageParamsPanel extends Panel {
         List<String> backends = StorageParamVisibility.selectableGroups();
         CheckGroupParamPanel panel = new CheckGroupParamPanel(
                 SELECTOR_ID, label, initiallyChecked, backends, StorageParamsPanel::providerLabel);
-        panel.getFormComponent().add(reapplyVisibilityOnChange());
+        panel.getFormComponent().add(showSelectedBackendsOnChange());
         return panel;
     }
 
-    private AjaxFormChoiceComponentUpdatingBehavior reapplyVisibilityOnChange() {
+    private AjaxFormChoiceComponentUpdatingBehavior showSelectedBackendsOnChange() {
         return new AjaxFormChoiceComponentUpdatingBehavior() {
             @Override
             protected void onUpdate(AjaxRequestTarget target) {
+                seedDeclaredDefaults();
                 applyVisibility(target);
             }
         };
+    }
+
+    /**
+     * Stores the declared defaults of the shown parameters lacking a value. Without it, an untouched checkbox would
+     * submit {@code false} over a declared default of {@code true}, turning S3 path-style access off.
+     */
+    private void seedDeclaredDefaults() {
+        Set<String> selectedGroups = selectedGroups();
+        Map<String, Serializable> stored = connectionParameters.getObject();
+        declaredDefaults.forEach((key, value) -> {
+            if (StorageParamVisibility.isVisible(key, selectedGroups)) {
+                stored.putIfAbsent(key, value);
+            }
+        });
     }
 
     private static IModel<String> providerLabel(String providerId) {
