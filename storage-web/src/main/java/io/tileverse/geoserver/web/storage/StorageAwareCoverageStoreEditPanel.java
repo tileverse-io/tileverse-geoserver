@@ -32,6 +32,9 @@ import io.tileverse.geoserver.web.storage.StorageParamsPanel.BackendSelection;
  * <p>It extends {@link StoreEditPanel} directly because a coverage store has no factory parameters for GeoServer's
  * stock panel to list.
  *
+ * <p>A subclass adds fields of its own between the URL field and the storage parameters with a markup file holding a
+ * {@code <wicket:extend>} element; a subclass without markup renders this panel's.
+ *
  * <p>Adapted from GeoServer's {@code PMTilesDataStoreEditPanel} (c) Open Source Geospatial Foundation, GPL-2.0.
  */
 // S110: the GeoServer/Wicket panel hierarchy (StoreEditPanel) exceeds Sonar's parent-count limit.
@@ -58,7 +61,10 @@ public abstract class StorageAwareCoverageStoreEditPanel extends StoreEditPanel 
         return true;
     }
 
-    /** The resource key of the URL field's placeholder, hinting at the locations accepted by the store. */
+    /**
+     * The resource key of the URL field's placeholder, hinting at the locations accepted by the store. The same key
+     * followed by {@code .tooltip} gives the tooltip of the field, for a store type defining that resource.
+     */
     protected abstract String urlPlaceholderKey();
 
     private TextParamPanel<String> urlPanel(IModel<String> urlModel) {
@@ -67,6 +73,8 @@ public abstract class StorageAwareCoverageStoreEditPanel extends StoreEditPanel 
                 new TextParamPanel<>("urlPanel", urlModel, label, true, new StorageUriValidator());
         IModel<String> placeholder = new ResourceModel(urlPlaceholderKey(), "");
         panel.getFormComponent().add(AttributeModifier.replace("placeholder", placeholder));
+        IModel<String> tooltip = Tooltips.of(urlPlaceholderKey(), panel, "");
+        panel.add(AttributeModifier.replace("title", tooltip));
         return panel;
     }
 }
