@@ -17,14 +17,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.util.string.Strings;
+import org.apache.wicket.util.tester.TagTester;
 import org.apache.wicket.util.tester.WicketTester;
 import org.geoserver.web.data.store.panel.CheckBoxParamPanel;
 import org.geoserver.web.data.store.panel.ParamPanel;
@@ -33,6 +38,8 @@ import org.geoserver.web.data.store.panel.TextParamPanel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import io.tileverse.storage.StorageParameter;
 import io.tileverse.storage.spi.StorageProvider;
@@ -83,12 +90,47 @@ class StorageParamInputsTest {
         assertThat(input).isInstanceOf(Select2ChoiceParamPanel.class);
     }
 
-    @Test
-    void anIntegerRendersAsATypedTextField() {
-        Panel input = inputFor(parameter -> parameter.type() == Integer.class);
+    static Stream<String> integerParameters() {
+        return Stream.of("storage.azure.max-retries", "storage.http.timeout-millis");
+    }
 
-        assertThat(input).isInstanceOf(TextParamPanel.class);
+    @ParameterizedTest
+    @MethodSource("integerParameters")
+    void anIntegerRendersAsANumberInput(String key) {
+        Panel input = inputFor(parameter -> key.equals(parameter.key()));
+
+        assertThat(input).isInstanceOf(NumberParamPanel.class);
         assertThat(((ParamPanel<?>) input).getFormComponent().getType()).isEqualTo(Integer.class);
+    }
+
+    @Test
+    void theNumberParametersAreNumberInputs() {
+        for (StorageParameter<?> parameter : StorageParams.orderedParameters(true)) {
+            if (Number.class.isAssignableFrom(parameter.type())) {
+                assertThat(StorageParamInputs.inputFor(paramsModel, parameter))
+                        .as(parameter.key())
+                        .isInstanceOf(NumberParamPanel.class);
+            }
+        }
+    }
+
+    @Test
+    void aNumberOfAnotherTypeRendersAsANumberInputOfItsType() {
+        StorageParameter<Long> size = new StorageParameter<>(
+                "storage.test.size",
+                "Size",
+                "A size in bytes",
+                "test",
+                Optional.empty(),
+                Long.class,
+                Optional.empty(),
+                List.of(),
+                false);
+
+        Panel input = StorageParamInputs.inputFor(paramsModel, size);
+
+        assertThat(input).isInstanceOf(NumberParamPanel.class);
+        assertThat(((ParamPanel<?>) input).getFormComponent().getType()).isEqualTo(Long.class);
     }
 
     @Test
@@ -144,6 +186,58 @@ class StorageParamInputsTest {
         String markup = tester.getLastResponseAsString();
         String description = timeout.description();
         assertThat(markup).contains("title=\"" + description);
+    }
+
+    @Test
+    void aBundleEntryNamedAfterTheParameterReplacesItsDescriptionOnHover() {
+        StorageParameter<?> timeout = parameter(p -> "storage.http.timeout-millis".equals(p.key()));
+        BundleEntry.define(tester, "storage.http.timeout-millis.tooltip", "Tiempo de espera de la conexion");
+
+        render(timeout);
+
+        TagTester field = tester.getTagByWicketId("field");
+        assertThat(field.getAttribute("title")).isEqualTo("Tiempo de espera de la conexion");
+    }
+
+    @Test
+    void aDescriptionWithBracesAndQuotesShowsAsWritten() {
+        String description = "Reads {user.home}/.aws/config, then the 'aws.region' property, for ${region}";
+        StorageParameter<String> region = textParameter("storage.test.region", description);
+
+        render(region);
+
+        TagTester field = tester.getTagByWicketId("field");
+        CharSequence tooltip = Strings.unescapeMarkup(field.getAttribute("title"));
+        assertThat(tooltip).hasToString(description);
+    }
+
+    @Test
+    void aParameterWithNeitherADescriptionNorABundleEntryHasNoTooltip() {
+        StorageParameter<String> undescribed = textParameter("storage.test.undescribed", "");
+
+        render(undescribed);
+
+        TagTester field = tester.getTagByWicketId("field");
+        assertThat(field.getAttribute("title")).isNull();
+    }
+
+    private void render(StorageParameter<?> parameter) {
+        Form<Void> form = new Form<>("form");
+        form.add(StorageParamInputs.inputFor(paramsModel, parameter));
+        tester.startComponentInPage(form);
+    }
+
+    private static StorageParameter<String> textParameter(String key, String description) {
+        return new StorageParameter<>(
+                key,
+                "A test parameter",
+                description,
+                "test",
+                Optional.empty(),
+                String.class,
+                Optional.empty(),
+                List.of(),
+                false);
     }
 
     private Panel inputFor(Predicate<StorageParameter<?>> which) {

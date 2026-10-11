@@ -37,7 +37,7 @@ final class StorageParamInputs {
 
     static Panel inputFor(IModel<Map<String, Serializable>> connectionParameters, StorageParameter<?> parameter) {
         Panel input = widgetFor(connectionParameters, parameter);
-        addTooltip(input, parameter.description());
+        addTooltip(input, parameter);
         return input;
     }
 
@@ -78,16 +78,18 @@ final class StorageParamInputs {
             return searchableDropdown(connectionParameters, parameter, label);
         }
         if (Number.class.isAssignableFrom(parameter.type())) {
-            return numberField(connectionParameters, key, label, numberType(parameter));
+            return numberField(connectionParameters, key, label, parameter.type());
         }
         return new TextParamPanel<>(FIELD_ID, stringModel(connectionParameters, key), label, false);
     }
 
-    /** Shows the parameter description on hover, as GeoServer's stock parameter list does. */
-    private static void addTooltip(Panel input, String description) {
-        if (!description.isBlank()) {
-            input.add(AttributeModifier.replace("title", description));
-        }
+    /**
+     * Shows a description of the parameter on hover, as GeoServer's stock parameter list does: the bundle entry named
+     * after the parameter key for the language of the session, else the description declared by the provider.
+     */
+    private static void addTooltip(Panel input, StorageParameter<?> parameter) {
+        IModel<String> tooltip = Tooltips.of(parameter.key(), input, parameter.description());
+        input.add(AttributeModifier.replace("title", tooltip));
     }
 
     private static Select2ChoiceParamPanel<String> searchableDropdown(
@@ -101,23 +103,20 @@ final class StorageParamInputs {
                 .allowCustomValues(true);
     }
 
-    /** Converts the input to {@code type}, as GeoServer's stock panel does. */
-    private static <N extends Serializable> TextParamPanel<N> numberField(
-            IModel<Map<String, Serializable>> connectionParameters, String key, IModel<String> label, Class<N> type) {
+    /** The number types declared by the providers compare to themselves, as required by a number input. */
+    @SuppressWarnings("unchecked")
+    private static <N extends Number & Comparable<N>> NumberParamPanel<N> numberField(
+            IModel<Map<String, Serializable>> connectionParameters,
+            String key,
+            IModel<String> label,
+            Class<?> declaredType) {
+        Class<N> type = (Class<N>) declaredType;
         IModel<N> model = new StorageParamModel<>(connectionParameters, key, type);
-        TextParamPanel<N> field = new TextParamPanel<>(FIELD_ID, model, label, false);
-        field.getFormComponent().setType(type);
-        return field;
+        return new NumberParamPanel<>(FIELD_ID, model, label, type);
     }
 
     private static StorageParamModel<String> stringModel(
             IModel<Map<String, Serializable>> connectionParameters, String key) {
         return new StorageParamModel<>(connectionParameters, key, String.class);
-    }
-
-    /** Every number type declared by the providers is {@link Serializable}. */
-    @SuppressWarnings("unchecked")
-    private static Class<? extends Serializable> numberType(StorageParameter<?> parameter) {
-        return (Class<? extends Serializable>) parameter.type();
     }
 }
