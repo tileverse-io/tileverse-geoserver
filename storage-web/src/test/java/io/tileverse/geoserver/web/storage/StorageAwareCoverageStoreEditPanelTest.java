@@ -24,6 +24,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.util.tester.FormTester;
+import org.apache.wicket.util.tester.TagTester;
 import org.apache.wicket.util.tester.WicketTester;
 import org.apache.wicket.validation.Validatable;
 import org.geoserver.catalog.CoverageStoreInfo;
@@ -76,6 +77,24 @@ class StorageAwareCoverageStoreEditPanelTest {
         TextParamPanel<?> urlPanel = (TextParamPanel<?>) panel.get("urlPanel");
 
         assertThat(urlPanel.getFormComponent().isRequired()).isTrue();
+    }
+
+    @Test
+    void theUrlFieldShowsTheDescriptionOfTheStoreTypeAsATooltip() {
+        BundleEntry.define(tester, "TestPanel.urlPlaceholder.tooltip", "One file, or a folder of them");
+
+        renderPanel(newStore());
+
+        TagTester urlPanel = tester.getTagByWicketId("urlPanel");
+        assertThat(urlPanel.getAttribute("title")).isEqualTo("One file, or a folder of them");
+    }
+
+    @Test
+    void theUrlFieldHasNoTooltipForAStoreTypeWithoutADescription() {
+        renderPanel(newStore());
+
+        TagTester urlPanel = tester.getTagByWicketId("urlPanel");
+        assertThat(urlPanel.getAttribute("title")).isNull();
     }
 
     @Test
@@ -160,12 +179,45 @@ class StorageAwareCoverageStoreEditPanelTest {
                 .containsEntry("storage.s3.endpoint", "http://localhost:9000");
     }
 
+    @Test
+    void aSubclassWithMarkupOfItsOwnRendersItsFieldBetweenTheUrlAndTheStorageParameters() {
+        renderExtendingPanel(newStore());
+
+        tester.assertComponent("form:panel:urlPanel", TextParamPanel.class);
+        tester.assertComponent("form:panel:storageParams", StorageParamsPanel.class);
+        TagTester ownField = tester.getTagByWicketId(ExtendingCoverageStoreEditPanel.OWN_FIELD_ID);
+        assertThat(ownField.getValue()).isEqualTo(ExtendingCoverageStoreEditPanel.OWN_FIELD_TEXT);
+        int urlField = renderedPositionOf("urlPanel");
+        int fieldOfTheSubclass = renderedPositionOf(ExtendingCoverageStoreEditPanel.OWN_FIELD_ID);
+        int storageSection = renderedPositionOf("storageParams");
+        assertThat(urlField).as("the URL field renders").isNotNegative();
+        assertThat(fieldOfTheSubclass)
+                .as("the field of the subclass follows the URL field")
+                .isGreaterThan(urlField);
+        assertThat(storageSection)
+                .as("the storage section follows the field of the subclass")
+                .isGreaterThan(fieldOfTheSubclass);
+    }
+
     private TestPanel renderPanel(CoverageStoreInfo storeInfo) {
         Form<CoverageStoreInfo> form = new Form<>("form", new Model<>(storeInfo));
         TestPanel panel = new TestPanel("panel", form);
         form.add(panel);
         tester.startComponentInPage(form);
         return panel;
+    }
+
+    private void renderExtendingPanel(CoverageStoreInfo storeInfo) {
+        Form<CoverageStoreInfo> form = new Form<>(FORM_PATH, new Model<>(storeInfo));
+        ExtendingCoverageStoreEditPanel panel = new ExtendingCoverageStoreEditPanel("panel", form);
+        form.add(panel);
+        tester.startComponentInPage(form);
+    }
+
+    /** The offset of the tag of a component in the last response, negative when the component did not render. */
+    private int renderedPositionOf(String wicketId) {
+        String rendered = tester.getLastResponseAsString();
+        return rendered.indexOf("wicket:id=\"" + wicketId + "\"");
     }
 
     @SuppressWarnings("unchecked")
