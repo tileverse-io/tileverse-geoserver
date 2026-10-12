@@ -29,6 +29,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.util.string.Strings;
+import org.apache.wicket.util.tester.FormTester;
 import org.apache.wicket.util.tester.TagTester;
 import org.apache.wicket.util.tester.WicketTester;
 import org.geoserver.web.data.store.panel.CheckBoxParamPanel;
@@ -221,6 +222,28 @@ class StorageParamInputsTest {
         assertThat(field.getAttribute("title")).isNull();
     }
 
+    @Test
+    void aFlagWithoutADefaultStaysUnset() {
+        StorageParameter<Boolean> flag = flagParameter(Optional.empty());
+        render(flag);
+
+        FormTester form = tester.newFormTester("form");
+        form.submit();
+
+        assertThat(params).doesNotContainKey(flag.key());
+    }
+
+    @Test
+    void aFlagWithADefaultStoresFalse() {
+        StorageParameter<Boolean> flag = flagParameter(Optional.of(Boolean.FALSE));
+        render(flag);
+
+        FormTester form = tester.newFormTester("form");
+        form.submit();
+
+        assertThat(params).containsEntry(flag.key(), Boolean.FALSE);
+    }
+
     private void render(StorageParameter<?> parameter) {
         Form<Void> form = new Form<>("form");
         form.add(StorageParamInputs.inputFor(paramsModel, parameter));
@@ -236,6 +259,19 @@ class StorageParamInputsTest {
                 Optional.empty(),
                 String.class,
                 Optional.empty(),
+                List.of(),
+                false);
+    }
+
+    private static StorageParameter<Boolean> flagParameter(Optional<Boolean> declaredDefault) {
+        return new StorageParameter<>(
+                "storage.test.flag",
+                "A test flag",
+                "",
+                "test",
+                Optional.empty(),
+                Boolean.class,
+                declaredDefault,
                 List.of(),
                 false);
     }
