@@ -337,6 +337,18 @@ class StorageParamsPanelTest {
     }
 
     @Test
+    void aFlagWithoutADefaultStaysUnset() {
+        params.put(PROVIDER, "http");
+        renderPanel(BackendSelection.SINGLE_PROVIDER, false);
+
+        FormTester form = tester.newFormTester("form");
+        form.submit();
+
+        tester.assertNoErrorMessage();
+        assertThat(params).doesNotContainKey("storage.http.trust-all-certificates");
+    }
+
+    @Test
     void anUntouchedSubmitKeepsPathStyleAccessOnForACustomS3Endpoint() {
         params.put(PROVIDER, "s3");
         params.put("storage.s3.endpoint", "http://localhost:9000");

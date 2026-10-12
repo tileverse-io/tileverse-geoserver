@@ -40,7 +40,8 @@ import io.tileverse.storage.StorageParameter;
  *
  * <p>A store keeps the parameters of its selected backends only: the section stores their declared defaults as soon as
  * their rows show, and a submit drops the parameters of the other backends. A stored default keeps the store stable
- * across a change of the engine's default.
+ * across a change of the engine's default. A Boolean parameter without a declared default is stored once its box is
+ * ticked, and left to the engine until then.
  *
  * <p>A single-provider store naming no provider is served by the backend selected by its URL, and opens with that
  * backend selected.
@@ -233,7 +234,7 @@ public class StorageParamsPanel extends Panel implements IFormModelUpdateListene
 
     /**
      * Stores the declared defaults of the shown parameters lacking a value. Without it, an untouched checkbox would
-     * submit {@code false} over a declared default of {@code true}, turning S3 path-style access off.
+     * submit {@code false} over a declared default of {@code true}.
      */
     private void seedDeclaredDefaults() {
         Set<String> selectedGroups = selectedGroups();

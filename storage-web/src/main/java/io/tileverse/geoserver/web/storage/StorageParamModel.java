@@ -62,4 +62,9 @@ final class StorageParamModel<T extends Serializable> implements IModel<T> {
     public void setObject(T value) {
         connectionParameters.getObject().put(key, value);
     }
+
+    /** Leaves the parameter out of the store. */
+    void unset() {
+        connectionParameters.getObject().remove(key);
+    }
 }
