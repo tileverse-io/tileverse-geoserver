@@ -68,7 +68,7 @@ final class StorageParamInputs {
             return new PasswordParamPanel(FIELD_ID, stringModel(connectionParameters, key), label, false);
         }
         if (parameter.type() == Boolean.class) {
-            IModel<Boolean> model = new StorageParamModel<>(connectionParameters, key, Boolean.class);
+            IModel<Boolean> model = flagModel(connectionParameters, parameter);
             return new CheckBoxParamPanel(FIELD_ID, model, label);
         }
         if (parameter.type() == Duration.class) {
@@ -90,6 +90,20 @@ final class StorageParamInputs {
     private static void addTooltip(Panel input, StorageParameter<?> parameter) {
         IModel<String> tooltip = Tooltips.of(parameter.key(), input, parameter.description());
         input.add(AttributeModifier.replace("title", tooltip));
+    }
+
+    /**
+     * A flag without a declared default stays out of the store while its box is unticked, leaving the choice to the
+     * engine. A flag with one is stored ticked or not: the section seeds its default.
+     */
+    private static IModel<Boolean> flagModel(
+            IModel<Map<String, Serializable>> connectionParameters, StorageParameter<?> parameter) {
+        StorageParamModel<Boolean> stored =
+                new StorageParamModel<>(connectionParameters, parameter.key(), Boolean.class);
+        if (parameter.defaultValue().isPresent()) {
+            return stored;
+        }
+        return new OptionalFlagModel(stored);
     }
 
     private static Select2ChoiceParamPanel<String> searchableDropdown(
