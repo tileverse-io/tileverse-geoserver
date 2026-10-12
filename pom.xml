@@ -70,7 +70,7 @@
     <parquetry.version>1.0-RC4</parquetry.version>
 
     <!-- This branch tracks the GeoServer 3.0 stable series. -->
-    <gs.version>3.0.0-SNAPSHOT</gs.version>
+    <gs.version>3.0.1</gs.version>
     <wicket.version>10.11.0</wicket.version>
     <!-- Jetty used only by the test-scope embedded launcher (Start); keep in step with GeoServer's Jetty. -->
     <jetty.version>12.1.8</jetty.version>
