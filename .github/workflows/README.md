@@ -22,11 +22,12 @@ Needs no secrets.
 
 ## `geoserver-demo-smoke.yml`
 
-Builds the GeoServer GeoParquet plugin, installs it into an official GeoServer
-binary the standard way (unzip into `WEB-INF/lib`), starts the demo stack
-(GeoServer + the s3proxy emulator) with `make demo-up`, and exercises
-both workspaces over REST, WFS and WMS - including the `parquetry-s3` layers
-that read from S3 through the AWS default credential chain. Runs on every PR and
+Builds the GeoServer plugins, installs them into an official GeoServer binary
+the standard way (unzip into `WEB-INF/lib`), starts the demo stack (GeoServer +
+the s3proxy emulator) with `make demo-up`, and runs `make demo-smoke` against
+it. The checks exercise REST, WFS and WMS on the demo workspaces, including the
+`parquetry-s3` layers read from S3 through the AWS default credential chain,
+and each plugin adds its own. Runs on every PR and
 push to `main` and the release series branches (ignoring `docs/**` and `**.md`).
 Needs no secrets.
 
@@ -42,9 +43,9 @@ Skipped when the head commit message contains `[skip-publish]`.
 Builds, tests, and publishes a release to Maven Central, then creates the GitHub
 Release. The version is fed to Maven as `-Drevision=<version>` (the POM uses
 CI-friendly `${revision}` versioning; the tag drives the published version). The
-GitHub Release also gets two attachments built at the same version: the
-GeoServer plugin zip (`tileverse-geoserver-parquetry-<version>-plugin.zip`) and the
-self-contained demo zip (`tileverse-geoserver-demo-<version>.zip`).
+GitHub Release also gets attachments built at the same version: one GeoServer
+plugin zip per plugin module (`tileverse-geoserver-<module>-<version>-plugin.zip`)
+and the self-contained demo zip (`tileverse-geoserver-demo-<version>.zip`).
 
 Triggered by either:
 

@@ -62,7 +62,6 @@
     <dependency>
       <groupId>jakarta.servlet</groupId>
       <artifactId>jakarta.servlet-api</artifactId>
-      <version>6.0.0</version>
       <scope>test</scope>
     </dependency>
     <!-- The provider registry the panels reflect over; the full set makes the tests see every backend. -->

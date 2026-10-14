@@ -1,4 +1,4 @@
-# GeoParquet in GeoServer - demo
+# Tileverse GeoServer plugins - demo
 
 A one-command demo that serves [Natural Earth](https://www.naturalearthdata.com/) as live WMS
 and WFS layers in [GeoServer](https://geoserver.org/), reading from
@@ -42,13 +42,22 @@ The `Makefile` is one level up, at the repository root. From there:
 make demo-up
 ```
 
-That builds the plugin zip, builds the image, and starts GeoServer. Then open:
+That builds the plugin zips, builds the image, and starts GeoServer. Then open:
 
 - Web admin: <http://localhost:8080/geoserver>  (user `admin`, password `geoserver`)
 - Layer preview: Web admin -> Layer Preview -> `parquetry:world`
 
 Stop it with `make demo-down`. Follow startup logs with `make demo-logs`. If the image is
 already built, `docker compose up` from this directory is enough.
+
+The GeoServer configuration lives in a named Docker volume, seeded from the baked-in data
+directory on first start and kept across `make demo-down` and `make demo-up`. Stores, layers and
+styles added through the web admin or the REST API survive a restart and an image rebuild: a
+plugin rebuilt from source picks up the same configuration. `make demo-clean` removes the volume
+along with the image; that is also the only way newly baked layers show up in an existing demo.
+To turn configuration made through the web admin into demo defaults, `make demo-export` copies
+the workspaces, styles and layer groups of the running demo back into `demo/geoserver-data`,
+ready to review and commit.
 
 ## Build a customer zip
 
@@ -57,7 +66,7 @@ make demo-dist
 ```
 
 produces `target/tileverse-geoserver-demo.zip`: a self-contained bundle (Dockerfile, the prebuilt
-plugin zip, the preconfigured data directory and the data, and a compose file). The recipient
+plugin zips, the preconfigured data directory and the data, and a compose file). The recipient
 needs only Docker - they unzip it and run `docker compose up`, with no checkout of this
 repository and no image registry. The first `up` builds the image locally.
 
@@ -81,7 +90,8 @@ curl "http://localhost:8080/geoserver/parquetry/wfs?service=WFS&version=2.0.0&re
 ## Smoke checks
 
 `demo/smoke/` holds the checks CI runs against the demo, as scripts you can run yourself once
-`make demo-up` is healthy:
+`make demo-up` is healthy. `make demo-smoke` runs `core.sh` first, then the other scripts, one or
+more per plugin:
 
 ```bash
 make demo-smoke
@@ -106,16 +116,16 @@ own data, drop GeoParquet files in `data/ne/` and adjust the `ne` datastore unde
 
 ## How it is built
 
-- `make geoserver-plugins` runs `./mvnw -pl :tileverse-geoserver-parquetry -Passembly package`, producing the
-  standard GeoServer-plugin zip (the plugin jar plus its runtime dependencies; libraries GeoServer
-  already ships are excluded). The demo targets stage a copy at `build/plugin.zip`.
+- `make plugins` runs `./mvnw -Passembly package` on the plugin modules, producing the standard
+  GeoServer-plugin zip of each (the plugin jar plus its runtime dependencies; libraries GeoServer
+  already ships are excluded). The demo targets stage them as `build/plugin-<module>.zip`.
 - The `Dockerfile` downloads the official GeoServer 3.0 platform-independent binary, drops the old
-  bundled Marlin renderer (incompatible with JDK 24+), unzips the plugin into `WEB-INF/lib`, and
-  bakes in the preconfigured `parquetry` workspace and the GeoParquet data.
+  bundled Marlin renderer (incompatible with JDK 24+), unzips the plugins into `WEB-INF/lib`, and
+  bakes in the preconfigured workspaces and their sample data.
 - GeoServer runs on Java 25 with the runtime options proven by GeoServer Cloud
   (`--enable-preview`, the required `--add-opens`, and the Apple-M4/Docker SVE workaround).
 - GeoServer regenerates the rest of its data directory (services, default styles, security) on
-  first boot; only the `parquetry` workspace is committed here.
+  first boot; only the demo workspaces are committed here.
 
 ## Notes
 
