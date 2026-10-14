@@ -114,6 +114,6 @@ layer from it.
 This module is licensed under the **GNU General Public License, version 2 or
 later** (`GPL-2.0-or-later`), because it is a GeoServer plugin and reuses
 GeoServer's GPL-2.0-or-later Wicket components. The full license text is in the
-`LICENSE` file and the third-party attribution is in `NOTICE`, both in this
-directory and bundled into the module jar under `META-INF`. The rest of
-parquetry is licensed under the Apache License, Version 2.0.
+`LICENSE` file and the third-party attribution is in `NOTICE`, both at the
+repository root and baked into the module jar's `META-INF` at build time. The
+rest of parquetry is licensed under the Apache License, Version 2.0.

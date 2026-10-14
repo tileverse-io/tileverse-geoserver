@@ -1,9 +1,9 @@
-# Parquet-in-GeoServer demo: GeoParquet, Iceberg and STAC layers in one GeoServer.
+# Tileverse GeoServer plugins demo: the sample layers of each plugin, in one GeoServer.
 #
 #   docker compose up        (or: make demo-up, from the repository root)
 #   open http://localhost:8080/geoserver  (admin / geoserver)
 #
-# Six workspaces are served on first boot, each reading through the parquetry plugin:
+# These workspaces are served on first boot. The first six read through the parquetry plugin:
 #   parquetry        - GeoParquet files read from local disk, baked into the image
 #   parquetry-s3     - the same GeoParquet layers over S3, via the bundled s3proxy emulator
 #   iceberg          - an Iceberg warehouse of tables read from local disk
@@ -72,9 +72,17 @@ services:
     volumes:
       # The AWS default credential chain reads ~/.aws/credentials (HOME is /root in this image).
       - ./secrets/aws:/root/.aws:ro
+      # The GeoServer configuration outlives the container: Docker seeds an empty named volume from
+      # the baked-in data directory on first start, and keeps it across `down` and `up`. Only
+      # `make demo-clean` removes it, and newly baked layers appear only after that.
+      - geoserver-data:/opt/geoserver/data_dir
     healthcheck:
       test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost:8080/geoserver/web/"]
       interval: 10s
       timeout: 5s
       retries: 30
       start_period: 40s
+
+volumes:
+  # Stores, layers and styles edited through the web admin or the REST API, kept across restarts.
+  geoserver-data:

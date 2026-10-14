@@ -72,6 +72,8 @@
     <!-- This branch tracks the GeoServer 2.28 stable series, pinned to the release verified with the plugins. -->
     <gs.version>2.28.5</gs.version>
     <wicket.version>9.23.0</wicket.version>
+    <!-- GeoTools matching gs.version; the pair moves in lockstep (GeoServer 2.28.5 ships GeoTools 34.5). -->
+    <gt.version>34.5</gt.version>
     <!-- Jetty used only by the test-scope embedded launcher (Start); keep in step with GeoServer's Jetty. -->
     <jetty.version>10.0.25</jetty.version>
     <!-- Servlet API for the test-scope Wicket tester and the launcher; the version used by GeoServer 2.28. -->
@@ -94,6 +96,15 @@
   </properties>
   <dependencyManagement>
     <dependencies>
+      <!-- GeoTools module versions matching gs.version (GeoServer provides the jars at runtime).
+           Imported before the engine BOMs: the first import to manage an artifact sets its version. -->
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-bom</artifactId>
+        <version>${gt.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <!-- Versions of the parquetry modules. Also conveys the tileverse-storage management (converged
            Jackson 2, JNA, etc.): a BOM import includes the dependencyManagement the imported POM inherits
            from its parents, and parquetry's root POM imports tileverse-bom. One version property to
@@ -338,7 +349,7 @@
               </licenseHeader>
               <removeUnusedImports/>
               <importOrder>
-                <order>java,javax,org,com,io.tileverse.storage,io.tileverse.geoserver,io.tileverse.parquetry,</order>
+                <order>java,javax,org,com,io.tileverse.storage,io.tileverse.cog,io.tileverse.versatiles,io.tileverse.geotools,io.tileverse.geoserver,io.tileverse.parquetry,</order>
               </importOrder>
             </java>
             <pom>
