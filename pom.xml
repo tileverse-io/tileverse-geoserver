@@ -72,8 +72,12 @@
     <!-- This branch tracks the GeoServer 3.0 stable series. -->
     <gs.version>3.0.1</gs.version>
     <wicket.version>10.11.0</wicket.version>
+    <!-- GeoTools matching gs.version; the pair moves in lockstep (GeoServer main tracks GeoTools main). -->
+    <gt.version>36-SNAPSHOT</gt.version>
     <!-- Jetty used only by the test-scope embedded launcher (Start); keep in step with GeoServer's Jetty. -->
     <jetty.version>12.1.8</jetty.version>
+    <!-- Servlet API for the test-scope Wicket tester, at the version used by GeoServer 3.1. -->
+    <jakarta.servlet.version>6.0.0</jakarta.servlet.version>
 
     <!-- GPG signing is off by default; the release pipeline flips it to false. -->
     <gpg.skip>true</gpg.skip>
@@ -92,6 +96,15 @@
   </properties>
   <dependencyManagement>
     <dependencies>
+      <!-- GeoTools module versions matching gs.version (GeoServer provides the jars at runtime).
+           Imported before the engine BOMs: the first import to manage an artifact sets its version. -->
+      <dependency>
+        <groupId>org.geotools</groupId>
+        <artifactId>gt-bom</artifactId>
+        <version>${gt.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <!-- Versions of the parquetry modules. Also conveys the tileverse-storage management (converged
            Jackson 2, JNA, etc.): a BOM import includes the dependencyManagement the imported POM inherits
            from its parents, and parquetry's root POM imports tileverse-bom. One version property to
@@ -169,6 +182,27 @@
         <groupId>org.apache.wicket</groupId>
         <artifactId>wicket-tester</artifactId>
         <version>${wicket.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.servlet</groupId>
+        <artifactId>jakarta.servlet-api</artifactId>
+        <version>${jakarta.servlet.version}</version>
+      </dependency>
+      <!-- Jetty for the test-scope embedded GeoServer launchers. -->
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-server</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty.ee10</groupId>
+        <artifactId>jetty-ee10-webapp</artifactId>
+        <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty.ee10</groupId>
+        <artifactId>jetty-ee10-servlet</artifactId>
+        <version>${jetty.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -331,7 +365,7 @@
               </licenseHeader>
               <removeUnusedImports/>
               <importOrder>
-                <order>java,javax,org,com,io.tileverse.storage,io.tileverse.geoserver,io.tileverse.parquetry,</order>
+                <order>java,javax,org,com,io.tileverse.storage,io.tileverse.cog,io.tileverse.versatiles,io.tileverse.geotools,io.tileverse.geoserver,io.tileverse.parquetry,</order>
               </importOrder>
             </java>
             <pom>

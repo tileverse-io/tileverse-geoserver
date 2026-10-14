@@ -1,4 +1,4 @@
-# Parquet in GeoServer - demo
+# Tileverse GeoServer plugins - demo
 
 GeoServer 3.0 serving [Natural Earth](https://www.naturalearthdata.com/) as live WMS/WFS layers,
 read through the parquetry plugin from three sources - [GeoParquet](https://geoparquet.org/) files,
@@ -19,7 +19,9 @@ needs internet). Later runs start instantly. Then open:
 - Web admin: <http://localhost:8080/geoserver>  (user `admin`, password `geoserver`)
 - Layer preview: Web admin -> Layer Preview -> `parquetry:world`
 
-Stop it with `Ctrl-C`, or `docker compose down` to remove the container.
+Stop it with `Ctrl-C`, or `docker compose down` to remove the container. The GeoServer
+configuration lives in a named volume and survives `docker compose down`; `docker compose down -v`
+removes it, and the next `up` starts again from the configuration baked into the image.
 
 ## What you get
 

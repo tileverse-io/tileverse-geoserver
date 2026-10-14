@@ -1,12 +1,15 @@
-# GeoServer 3.0 with the parquetry GeoParquet plugin, on Java 25 with --enable-preview.
+# GeoServer 3.0 with the plugins of this repository, on Java 25 with --enable-preview.
 #
 # Stock GeoServer images run Java 17/21 and cannot load the parquetry classes (they carry
 # preview bytecode). This image takes the official platform-independent GeoServer binary
-# (self-contained Jetty + exploded webapp), drops the parquetry plugin into WEB-INF/lib the
-# standard GeoServer way, and runs it on a Java 25 JVM.
+# (self-contained Jetty + exploded webapp), drops the plugins into WEB-INF/lib the standard
+# GeoServer way, and runs it on a Java 25 JVM.
 #
-# The plugin zip (build/plugin.zip) is produced on the host by the Makefile
-# (./mvnw -Passembly package on parquetry-geoserver); this image only unzips it in place.
+# The plugin zips (build/plugin-<module>.zip) are produced on the host by the Makefile
+# (./mvnw -Passembly package on each plugin module); this image only unzips them in place.
+# One reactor build produces them all at one version: the shared jars (e.g.
+# tileverse-geoserver-storage-web) are identical files, and unzipping a zip on top of another
+# overwrites them harmlessly.
 
 FROM eclipse-temurin:25
 
@@ -57,14 +60,16 @@ RUN curl -fSL --retry 4 --retry-delay 5 --retry-all-errors -o /tmp/geoserver.zip
     && rm -f /opt/geoserver/webapps/geoserver/WEB-INF/lib/marlin-*.jar \
     && rm -rf /opt/geoserver/data_dir
 
-# Install the plugin the standard GeoServer way: unzip its jars into the webapp's WEB-INF/lib.
-COPY build/plugin.zip /tmp/plugin.zip
-RUN unzip -o -q /tmp/plugin.zip -d /opt/geoserver/webapps/geoserver/WEB-INF/lib \
-    && rm /tmp/plugin.zip
+# Install the plugins the standard GeoServer way: unzip their jars into the webapp's WEB-INF/lib.
+COPY build/plugin-*.zip /tmp/plugins/
+RUN set -e; \
+    for zip in /tmp/plugins/*.zip; do \
+      unzip -o -q "$zip" -d /opt/geoserver/webapps/geoserver/WEB-INF/lib; \
+    done; \
+    rm -rf /tmp/plugins
 
-# Bake the preconfigured data directory (workspace + GeoParquet store + published layer) and the
-# sample dataset. The container then serves a live WMS/WFS layer on first boot with no manual steps.
-# The data directory references the dataset at file:///data/countries.parquet.
+# Bake the preconfigured data directory (workspaces + stores + published layers) and the sample
+# datasets. The container then serves live layers on first boot with no manual steps.
 COPY geoserver-data /opt/geoserver/data_dir
 COPY data /data
 
