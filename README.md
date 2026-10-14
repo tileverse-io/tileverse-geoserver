@@ -34,28 +34,36 @@ a gigabyte or two of heap.
   native-access flags, for the Parquetry plugin: `parquetry-core` is compiled
   with preview features, and a Java 17/21 GeoServer cannot load it. The
   `storage-web` module itself is plain Java 17.
-- **GeoServer 3.0.1 / GeoTools 35.0** (the `provided` versions this repo builds
-  against). The deployment target is GeoServer Cloud on Java 25.
+- **GeoServer / GeoTools** (the `provided` versions this repo builds against).
+  The `main` branch tracks the GeoServer development series, and the pinned
+  versions move with it - currently GeoServer `3.1.0-SNAPSHOT` / GeoTools
+  `36-SNAPSHOT` (`gs.version` / `gt.version` in the root POM); each release
+  series branch (`3.0.x`, ...) pins the matching GeoServer release instead.
+  The deployment target is GeoServer Cloud on Java 25.
 - Maven (use the bundled `./mvnw`).
 
-## Building the Parquetry plugin
+## Building the plugins
 
-The plugin zip is a flat set of jars to unzip into a GeoServer installation's
+Each plugin zip is a flat set of jars to unzip into a GeoServer installation's
 `webapps/geoserver/WEB-INF/lib`. It contains the plugin jar, the `storage-web`
 jar, and the runtime dependencies GeoServer/GeoTools do not already ship.
 
 ```bash
-# Build tileverse-geoserver-parquetry-<version>-plugin.zip under parquetry/target/
-make geoserver-plugins
+# Build each plugin zip in one reactor pass, as
+# <module>/target/tileverse-geoserver-<module>-<version>-plugin.zip
+make plugins
 
-# Equivalent direct invocation
+# Build a single plugin zip, through the module's own Makefile
+make parquetry-plugin
+
+# Equivalent direct invocation for one plugin
 ./mvnw -pl :tileverse-geoserver-parquetry -am -Passembly package
 ```
 
-Install it by unzipping into an existing GeoServer, then restart:
+Install a plugin by unzipping it into an existing GeoServer, then restart:
 
 ```bash
-unzip tileverse-geoserver-parquetry-<version>-plugin.zip -d "$GEOSERVER_HOME/webapps/geoserver/WEB-INF/lib"
+unzip tileverse-geoserver-<module>-<version>-plugin.zip -d "$GEOSERVER_HOME/webapps/geoserver/WEB-INF/lib"
 ```
 
 In the GeoServer UI, go to **Stores > Add new store**; "Parquet", "Iceberg",
@@ -71,7 +79,8 @@ each over local disk and over an S3 emulator):
 ```bash
 make demo-up     # build the plugins, build the image, start GeoServer
 # open http://localhost:8080/geoserver  (admin / geoserver)
-make demo-down   # stop and remove the containers
+make demo-down   # stop and remove the containers; the GeoServer configuration is kept
+make demo-clean  # also drop the saved configuration and the image
 ```
 
 `make demo-dist` bundles the demo into a customer zip that needs only Docker.
