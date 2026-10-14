@@ -1,9 +1,9 @@
 name: GeoServer Demo Smoke Test
 
 on:
-  # The plugin depends transitively on parquetry-core, -format, -io and
-  # -tileverse-storage; a change anywhere in the code can break the demo. Run on any
-  # change except docs, rather than only on the geoserver/geotools modules.
+  # The demo bundles each plugin, and the plugins depend transitively on their engines and
+  # on tileverse-storage; a change anywhere in the code can break the demo. Run on any
+  # change except docs, rather than only on the plugin modules.
   pull_request:
     branches: [main, '[0-9]+.[0-9]+.x']
     paths-ignore:
@@ -77,17 +77,11 @@ jobs:
           echo "GeoServer did not become healthy in time"
           exit 1
 
-      # The checks live in demo/smoke/ as shell scripts, runnable against a local demo with
-      # `make demo-smoke`. Keeping them out of this file means a failure can be reproduced
-      # without re-running the workflow.
-      - name: Smoke test (core services)
-        run: demo/smoke/core.sh
-
-      - name: Smoke test (GeoParquet output format)
-        run: demo/smoke/geoparquet.sh
-
-      - name: Smoke test (Arrow IPC output format)
-        run: demo/smoke/arrow-ipc.sh
+      # The checks live in demo/smoke/ as shell scripts, one or more per plugin, and
+      # `make demo-smoke` runs them all, here or against a local demo. Keeping them out of
+      # this file means a failure can be reproduced without re-running the workflow.
+      - name: Smoke tests
+        run: make demo-smoke
 
       - name: Dump container logs on failure
         if: failure()
