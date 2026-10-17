@@ -358,8 +358,9 @@ class StorageParamsPanelTest {
         form.submit();
 
         tester.assertNoErrorMessage();
+        // Without a stored value, tileverse uses path style for a custom endpoint.
         assertThat(params)
-                .containsEntry("storage.s3.force-path-style", Boolean.TRUE)
+                .doesNotContainKey("storage.s3.force-path-style")
                 .containsEntry("storage.s3.requester-pays", Boolean.FALSE)
                 .containsEntry("storage.s3.anonymous", Boolean.FALSE);
     }
@@ -374,7 +375,6 @@ class StorageParamsPanelTest {
                 .containsOnly(
                         entry(PROVIDER, "s3"),
                         entry("storage.caching.enabled", Boolean.FALSE),
-                        entry("storage.s3.force-path-style", Boolean.TRUE),
                         entry("storage.s3.requester-pays", Boolean.FALSE),
                         entry("storage.s3.anonymous", Boolean.FALSE));
     }
@@ -382,11 +382,11 @@ class StorageParamsPanelTest {
     @Test
     void aStoredValueWinsOverTheDeclaredDefault() {
         params.put(PROVIDER, "s3");
-        params.put("storage.s3.force-path-style", Boolean.FALSE);
+        params.put("storage.s3.requester-pays", Boolean.TRUE);
 
         renderPanel(BackendSelection.SINGLE_PROVIDER, true);
 
-        assertThat(params).containsEntry("storage.s3.force-path-style", Boolean.FALSE);
+        assertThat(params).containsEntry("storage.s3.requester-pays", Boolean.TRUE);
     }
 
     @Test
@@ -455,7 +455,7 @@ class StorageParamsPanelTest {
         assertThat(params)
                 .containsEntry("storage.http.timeout-millis", 5000)
                 .containsEntry("storage.s3.region", "us-east-1")
-                .containsEntry("storage.s3.force-path-style", Boolean.TRUE);
+                .containsEntry("storage.s3.anonymous", Boolean.FALSE);
     }
 
     @Test

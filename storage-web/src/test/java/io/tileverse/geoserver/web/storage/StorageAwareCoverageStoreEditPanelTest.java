@@ -156,7 +156,6 @@ class StorageAwareCoverageStoreEditPanelTest {
                 .containsOnly(
                         entry(StorageConfig.PROVIDER_ID_KEY, "s3"),
                         entry("storage.s3.endpoint", "http://localhost:9000"),
-                        entry("storage.s3.force-path-style", Boolean.TRUE),
                         entry("storage.s3.requester-pays", Boolean.FALSE),
                         entry("storage.s3.anonymous", Boolean.FALSE));
     }
