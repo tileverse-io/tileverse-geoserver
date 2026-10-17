@@ -73,7 +73,7 @@
     <gs.version>3.0.1</gs.version>
     <wicket.version>10.11.0</wicket.version>
     <!-- GeoTools matching gs.version; the pair moves in lockstep (GeoServer main tracks GeoTools main). -->
-    <gt.version>36-SNAPSHOT</gt.version>
+    <gt.version>35-SNAPSHOT</gt.version>
     <!-- Jetty used only by the test-scope embedded launcher (Start); keep in step with GeoServer's Jetty. -->
     <jetty.version>12.1.8</jetty.version>
     <!-- Servlet API for the test-scope Wicket tester, at the version used by GeoServer 3.1. -->
