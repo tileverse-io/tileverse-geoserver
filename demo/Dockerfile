@@ -13,7 +13,7 @@
 
 FROM eclipse-temurin:25
 
-ARG GEOSERVER_VERSION=2.28.5
+ARG GEOSERVER_VERSION=2.28.6
 
 # Proven Java 25 runtime options from GeoServer Cloud's images. Beyond parquetry's own
 # --enable-preview / --enable-native-access, GeoServer needs the java.desktop, java.naming
