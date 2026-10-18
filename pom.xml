@@ -70,10 +70,10 @@
     <parquetry.version>1.0-RC5</parquetry.version>
 
     <!-- This branch tracks the GeoServer 2.28 stable series, pinned to the release verified with the plugins. -->
-    <gs.version>2.28.5</gs.version>
+    <gs.version>2.28.6</gs.version>
     <wicket.version>9.23.0</wicket.version>
     <!-- GeoTools matching gs.version; the pair moves in lockstep (GeoServer 2.28.5 ships GeoTools 34.5). -->
-    <gt.version>34.5</gt.version>
+    <gt.version>34.6</gt.version>
     <!-- Jetty used only by the test-scope embedded launcher (Start); keep in step with GeoServer's Jetty. -->
     <jetty.version>10.0.25</jetty.version>
     <!-- Servlet API for the test-scope Wicket tester and the launcher; the version used by GeoServer 2.28. -->
