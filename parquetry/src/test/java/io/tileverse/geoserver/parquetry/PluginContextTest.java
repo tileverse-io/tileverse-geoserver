@@ -29,6 +29,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 
 import io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel;
+import io.tileverse.geoserver.parquetry.web.IcebergDataStoreEditPanel;
 import io.tileverse.geoserver.parquetry.web.StacDataStoreEditPanel;
 import io.tileverse.geoserver.parquetry.wfs.ArrowIpcOutputFormat;
 import io.tileverse.geoserver.parquetry.wfs.GeoParquetOutputFormat;
@@ -77,7 +78,7 @@ class PluginContextTest {
         DataStorePanelInfo panel = context.getBean("icebergDataStorePanel", DataStorePanelInfo.class);
 
         assertThat(panel.getFactoryClass()).isEqualTo(IcebergDataStoreFactory.class);
-        assertThat(panel.getComponentClass()).isEqualTo(GeoParquetDataStoreEditPanel.class);
+        assertThat(panel.getComponentClass()).isEqualTo(IcebergDataStoreEditPanel.class);
         assertThat(panel.getIcon()).isEqualTo("img/icons/apache-iceberg.svg");
     }
 

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<html xmlns:wicket="http://wicket.apache.org/">
+  <body>
+    <wicket:panel>
+      <div class="gs-panel-StorageBrowserPanel">
+        <div wicket:id="feedback"></div>
+        <div wicket:id="retry" class="button-group">
+          <a class="button" href="#" wicket:id="retryLink"><wicket:message key="StorageBrowserPanel.retry">Retry</wicket:message></a>
+        </div>
+        <div wicket:id="content" class="gs-storage-browser-content">
+          <div class="gs-storage-browser-place">
+            <select wicket:id="root"></select>
+            <span wicket:id="crumbs"><span wicket:id="crumb"></span> / </span>
+          </div>
+          <p wicket:id="truncated"></p>
+          <div wicket:id="sortNotice"></div>
+          <div wicket:id="table" class="gs-storage-browser-table"></div>
+          <div class="gs-storage-browser-buttons button-group">
+            <a class="button" href="#" wicket:id="chooseFolder"><wicket:message key="StorageBrowserPanel.chooseFolder">Choose this folder</wicket:message></a>
+            <a class="button" href="#" wicket:id="refresh"><wicket:message key="StorageBrowserPanel.refresh">Refresh</wicket:message></a>
+            <a class="button" href="#" wicket:id="cancel"><wicket:message key="StorageBrowserPanel.cancel">Cancel</wicket:message></a>
+          </div>
+        </div>
+      </div>
+    </wicket:panel>
+  </body>
+</html>

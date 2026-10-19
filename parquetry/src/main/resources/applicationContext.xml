@@ -34,8 +34,8 @@
   <bean id="icebergDataStorePanel" class="org.geoserver.web.data.resource.DataStorePanelInfo">
     <property name="id" value="iceberg"/>
     <property name="factoryClass" value="io.tileverse.parquetry.geotools.iceberg.IcebergDataStoreFactory"/>
-    <property name="componentClass" value="io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel"/>
-    <property name="iconBase" value="io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel"/>
+    <property name="componentClass" value="io.tileverse.geoserver.parquetry.web.IcebergDataStoreEditPanel"/>
+    <property name="iconBase" value="io.tileverse.geoserver.parquetry.web.IcebergDataStoreEditPanel"/>
     <property name="icon" value="img/icons/apache-iceberg.svg"/>
   </bean>
   <bean id="stacDataStorePanel" class="org.geoserver.web.data.resource.DataStorePanelInfo">

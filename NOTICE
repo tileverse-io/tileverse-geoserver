@@ -13,8 +13,9 @@ License, version 2 or later, Copyright Open Source Geospatial Foundation:
 
   - the Wicket widgets RadioGroupParamPanel and Select2ChoiceParamPanel
     (copied verbatim), and
-  - the design of the store edit panel GeoParquetDataStoreEditPanel
-    (adapted from PMTilesDataStoreEditPanel).
+  - the design of the store edit panels: the storage-aware base panels of
+    storage-web and the GeoParquet, Iceberg and STAC panels (adapted from
+    PMTilesDataStoreEditPanel).
 
 (https://github.com/geoserver/geoserver)
 
