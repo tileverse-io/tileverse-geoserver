@@ -18,6 +18,11 @@ dropdown). It has no dependency on any format engine and
 no preview bytecode; any store plugin that reads through tileverse-storage's
 `RangeReader` SPI (local files, HTTP, S3, Azure, GCS) can reuse it.
 
+A store panel can also give its location field a "Browse..." button. The
+dialog lists one folder of the typed storage at a time. The store plugin
+supplies the columns shown for its file formats. A chosen file or folder
+goes back into the field, and the store is not saved.
+
 The Parquetry plugin's data-access code lives in
 [parquetry](https://github.com/tileverse-io/parquetry) (the `parquetry-geotools`
 module); GeoServer auto-discovers its `DataStoreFactorySpi` from that jar. The
