@@ -609,6 +609,151 @@ class StorageParamsPanelTest {
         assertThat(params).doesNotContainKey(PROVIDER);
     }
 
+    @Test
+    void typedValuesOverrideStoredOnes() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.s3.region", "us-east-1");
+        TypedParametersPanel harness = renderHarness();
+        FormTester form = tester.newFormTester("form", false);
+        form.setValue(fieldOf(harness, "storage.s3.region"), "us-west-2");
+
+        tester.executeAjaxEvent("form:panel:read", "click");
+
+        assertThat(harness.lastRead())
+                .containsEntry("storage.s3.region", "us-west-2")
+                .containsEntry(PROVIDER, "s3");
+        assertThat(params).containsEntry("storage.s3.region", "us-east-1");
+    }
+
+    @Test
+    void untouchedSecretKeepsTheStored() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.s3.aws-secret-access-key", "s3cr3t");
+        TypedParametersPanel harness = renderHarness();
+        tester.newFormTester("form", false);
+
+        tester.executeAjaxEvent("form:panel:read", "click");
+
+        assertThat(harness.lastRead()).containsEntry("storage.s3.aws-secret-access-key", "s3cr3t");
+    }
+
+    @Test
+    void typedParametersOmitCaching() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.caching.enabled", true);
+        TypedParametersPanel harness = renderHarness();
+        tester.newFormTester("form", false);
+
+        tester.executeAjaxEvent("form:panel:read", "click");
+
+        assertThat(harness.lastRead()).doesNotContainKey("storage.caching.enabled");
+    }
+
+    @Test
+    void typedParametersOmitOtherBackends() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.azure.account-key", "k3y-azure");
+        TypedParametersPanel harness = renderHarness();
+        tester.newFormTester("form", false);
+
+        tester.executeAjaxEvent("form:panel:read", "click");
+
+        assertThat(harness.lastRead()).doesNotContainKey("storage.azure.account-key");
+    }
+
+    @Test
+    void aBadNumberStopsTheRead() {
+        params.put(PROVIDER, "http");
+        TypedParametersPanel harness = renderHarness();
+        FormTester form = tester.newFormTester("form", false);
+        FormComponent<?> timeout = fieldOf(harness, "storage.http.timeout-millis");
+        form.setValue(timeout, "soon");
+
+        tester.executeAjaxEvent("form:panel:read", "click");
+
+        assertThat(harness.converted()).isFalse();
+        assertThat(timeout.hasErrorMessage()).isTrue();
+    }
+
+    // without a value, tileverse uses path style for a custom S3 endpoint; a typed false would turn that off
+    @Test
+    void typedParametersOmitUnsetFlags() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.s3.endpoint", "http://localhost:9000");
+        TypedParametersPanel harness = renderHarness();
+        tester.newFormTester("form", false);
+
+        tester.executeAjaxEvent("form:panel:read", "click");
+
+        assertThat(harness.lastRead()).doesNotContainKey("storage.s3.force-path-style");
+    }
+
+    @Test
+    void typedParametersKeepTickedFlags() {
+        params.put(PROVIDER, "s3");
+        TypedParametersPanel harness = renderHarness();
+        FormTester form = tester.newFormTester("form", false);
+        form.setValue(fieldOf(harness, "storage.s3.force-path-style"), "true");
+
+        tester.executeAjaxEvent("form:panel:read", "click");
+
+        assertThat(harness.lastRead()).containsEntry("storage.s3.force-path-style", "true");
+    }
+
+    @Test
+    void untickedStoredFlagIsDropped() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.s3.force-path-style", Boolean.TRUE);
+        TypedParametersPanel harness = renderHarness();
+        FormTester form = tester.newFormTester("form", false);
+        form.setValue(fieldOf(harness, "storage.s3.force-path-style"), "false");
+
+        tester.executeAjaxEvent("form:panel:read", "click");
+
+        assertThat(harness.lastRead()).doesNotContainKey("storage.s3.force-path-style");
+    }
+
+    @Test
+    void untickedFlagWithDefaultIsFalse() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.s3.anonymous", Boolean.TRUE);
+        TypedParametersPanel harness = renderHarness();
+        FormTester form = tester.newFormTester("form", false);
+        form.setValue(fieldOf(harness, "storage.s3.anonymous"), "false");
+
+        tester.executeAjaxEvent("form:panel:read", "click");
+
+        assertThat(harness.lastRead()).containsEntry("storage.s3.anonymous", "false");
+    }
+
+    // reading a hidden row would turn its flag into an unticked box: the row sends no input
+    @Test
+    void typedParametersSkipHiddenRows() {
+        params.put(PROVIDER, "s3");
+        TypedParametersPanel harness = renderHarness();
+        tester.newFormTester("form", false);
+
+        tester.executeAjaxEvent("form:panel:read", "click");
+
+        assertThat(harness.lastRead()).doesNotContainKey("storage.azure.anonymous");
+    }
+
+    @Test
+    void eachBadValueShowsItsError() {
+        params.put(PROVIDER, "azure");
+        TypedParametersPanel harness = renderHarness();
+        FormTester form = tester.newFormTester("form", false);
+        FormComponent<?> retries = fieldOf(harness, "storage.azure.max-retries");
+        FormComponent<?> delay = fieldOf(harness, "storage.azure.retry-delay");
+        form.setValue(retries, "many");
+        form.setValue(delay.getInputName() + ":amount", "long");
+
+        tester.executeAjaxEvent("form:panel:read", "click");
+
+        assertThat(retries.hasErrorMessage()).isTrue();
+        assertThat(delay.isValid()).isFalse();
+    }
+
     private StorageParamsPanel renderPanel(BackendSelection selection, boolean cachingParameters) {
         Form<Void> form = new Form<>("form");
         StorageParamsPanel panel = new StorageParamsPanel("panel", paramsModel, selection, cachingParameters);
@@ -627,8 +772,20 @@ class StorageParamsPanelTest {
         return panel;
     }
 
+    private TypedParametersPanel renderHarness() {
+        Form<Void> form = new Form<>("form");
+        TypedParametersPanel harness = new TypedParametersPanel("panel", paramsModel, BackendSelection.SINGLE_PROVIDER);
+        form.add(harness);
+        tester.startComponentInPage(form);
+        return harness;
+    }
+
     private static FormComponent<?> formComponent(StorageParamsPanel panel, String key) {
         return ((ParamPanel<?>) panel.fieldFor(key)).getFormComponent();
+    }
+
+    private static FormComponent<?> fieldOf(TypedParametersPanel harness, String key) {
+        return formComponent(harness.storage(), key);
     }
 
     private static List<String> headers(String markup) {

@@ -102,6 +102,13 @@
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
+    <!-- GeoServerWicketTestSupport, for the store pages. -->
+    <dependency>
+      <groupId>org.geoserver.web</groupId>
+      <artifactId>gs-web-core</artifactId>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
     <!-- The GeoServer test harness is JUnit 4. -->
     <dependency>
       <groupId>org.junit.vintage</groupId>
