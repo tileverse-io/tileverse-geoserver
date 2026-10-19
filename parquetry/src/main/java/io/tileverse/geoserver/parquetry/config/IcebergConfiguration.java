@@ -17,14 +17,13 @@ import org.geoserver.web.data.resource.DataStorePanelInfo;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel;
+import io.tileverse.geoserver.parquetry.web.IcebergDataStoreEditPanel;
 
 import io.tileverse.parquetry.geotools.iceberg.IcebergDataStoreFactory;
 
 /**
- * Registers the Iceberg vector store in the GeoServer UI. Being single-backend (one {@code storage.provider} parameter,
- * like GeoParquet), the Iceberg store reuses {@link GeoParquetDataStoreEditPanel}, the single-select panel that renders
- * the grouped, provider-driven storage parameters.
+ * Registers the Iceberg vector store in the GeoServer UI with {@link IcebergDataStoreEditPanel}. As for GeoParquet, the
+ * panel offers one storage provider, and its URL field browses for a folder.
  *
  * <p>GeoServer Cloud imports this class directly; vanilla GeoServer reaches the same bean through the plugin's
  * {@code applicationContext.xml}.
@@ -37,7 +36,7 @@ public class IcebergConfiguration {
         return DataStorePanels.panel(
                 "iceberg",
                 IcebergDataStoreFactory.class,
-                GeoParquetDataStoreEditPanel.class,
+                IcebergDataStoreEditPanel.class,
                 "img/icons/apache-iceberg.svg");
     }
 

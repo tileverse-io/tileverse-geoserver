@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel;
+import io.tileverse.geoserver.parquetry.web.IcebergDataStoreEditPanel;
 import io.tileverse.geoserver.parquetry.web.StacDataStoreEditPanel;
 
 import io.tileverse.parquetry.geotools.iceberg.IcebergDataStoreFactory;
@@ -65,7 +66,7 @@ class StoreConfigurationTest {
 
         assertThat(panel.getId()).isEqualTo("iceberg");
         assertThat(panel.getFactoryClass()).isEqualTo(IcebergDataStoreFactory.class);
-        assertThat(panel.getComponentClass()).isEqualTo(GeoParquetDataStoreEditPanel.class);
+        assertThat(panel.getComponentClass()).isEqualTo(IcebergDataStoreEditPanel.class);
         assertThat(panel.getIcon()).isEqualTo("img/icons/apache-iceberg.svg");
     }
 
