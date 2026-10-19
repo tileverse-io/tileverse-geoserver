@@ -16,6 +16,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -23,6 +25,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.ResourceModel;
 import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.NamespaceInfo;
 import org.geoserver.catalog.StoreInfo;
@@ -30,13 +33,19 @@ import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.data.store.DefaultDataStoreEditPanel;
 import org.geoserver.web.data.store.ParamInfo;
+import org.geoserver.web.util.MapModel;
 
 import io.tileverse.geoserver.web.storage.StorageParamsPanel.BackendSelection;
+import io.tileverse.geoserver.web.storage.browser.StorageBrowsing;
+import io.tileverse.geoserver.web.storage.browser.StorageLocationField;
 
 /**
  * Base store edit panel for the parquetry DataStores: GeoServer's stock panel renders the core parameters, and one
  * {@link StorageParamsPanel} takes the row of the first {@code storage.*} parameter, blanking the other storage rows.
  * The section thus appears where the factory lists its storage parameters, with no markup slot needed in subclasses.
+ *
+ * <p>A subclass returning a {@link StorageBrowsing} from {@link #browsing(String)} for a location parameter gets a
+ * "Browse..." button next to its field.
  *
  * <p>Adapted from GeoServer's {@code PMTilesDataStoreEditPanel} (c) Open Source Geospatial Foundation, GPL-2.0.
  */
@@ -87,6 +96,19 @@ public abstract class StorageAwareDataStoreEditPanel extends DefaultDataStoreEdi
         this.locationKeys = List.copyOf(locationKeys);
     }
 
+    /**
+     * The pick mode and the format columns of the Browse button of a location parameter. The default is an empty
+     * result, and the parameter keeps GeoServer's text field.
+     *
+     * <p>The row stores the text as typed. GeoServer's stock row also prefixes a parameter named {@code url} with
+     * {@code file://} and checks that the file exists; this row does neither.
+     *
+     * @param locationKey the key of a connection parameter of the store
+     */
+    protected Optional<StorageBrowsing> browsing(String locationKey) {
+        return Optional.empty();
+    }
+
     @Override
     protected void onBeforeRender() {
         super.onBeforeRender();
@@ -134,6 +156,10 @@ public abstract class StorageAwareDataStoreEditPanel extends DefaultDataStoreEdi
     @Override
     protected Panel getInputComponent(
             String componentId, IModel<Map<String, Serializable>> paramsModel, ParamInfo paramMetadata) {
+        Optional<StorageBrowsing> browsing = browsing(paramMetadata.getName());
+        if (browsing.isPresent()) {
+            return locationField(componentId, paramsModel, paramMetadata, browsing.get());
+        }
         if (!isStorageParam(paramMetadata.getName())) {
             return super.getInputComponent(componentId, paramsModel, paramMetadata);
         }
@@ -143,6 +169,27 @@ public abstract class StorageAwareDataStoreEditPanel extends DefaultDataStoreEdi
             return storageSection;
         }
         return placeholder(componentId);
+    }
+
+    /** GeoServer's text row of the parameter, with a Browse button: the same label and required mark. */
+    private StorageLocationField locationField(
+            String componentId,
+            IModel<Map<String, Serializable>> paramsModel,
+            ParamInfo paramMetadata,
+            StorageBrowsing browsing) {
+        String key = paramMetadata.getName();
+        IModel<String> location = new MapModel<>(paramsModel, key);
+        IModel<String> label = new ResourceModel(key, key);
+        boolean required = paramMetadata.isRequired();
+        return new StorageLocationField(componentId, location, label, required, browsing, this::typedStorageParameters);
+    }
+
+    /** A store type without storage parameters has no section and nothing typed in it. */
+    private Optional<Properties> typedStorageParameters() {
+        if (storageSection == null) {
+            return Optional.of(new Properties());
+        }
+        return storageSection.typedParameters();
     }
 
     /** {@code null} when the store holds none of the location parameters. */
