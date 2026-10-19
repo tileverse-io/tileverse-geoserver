@@ -13,22 +13,28 @@
 package io.tileverse.geoserver.web.storage;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.IFormModelUpdateListener;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.RepeatingView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.util.visit.IVisitor;
+import org.geoserver.web.data.store.panel.ParamPanel;
 
 import io.tileverse.storage.StorageConfig;
 import io.tileverse.storage.StorageParameter;
@@ -149,8 +155,96 @@ public class StorageParamsPanel extends Panel implements IFormModelUpdateListene
         return (Panel) rowFor(key).get(GroupedParamPanel.FIELD_ID);
     }
 
+    /**
+     * The storage parameters as typed in the section, for browsing before a save: the stored values of the selected
+     * backends, overridden by the input submitted in their fields. A field showing its stored value keeps it: an
+     * untouched secret submits GeoServer's placeholder, never the secret. The caching parameters are left out, since
+     * they tune the reads of the store, not browsing. An unticked flag without a declared default is left out, as in a
+     * save, except a stored false: that one stays. A value failing its conversion reports the error on its field, as a
+     * save does. No model changes.
+     *
+     * @return the parameters as text, or empty when a value failed its conversion
+     */
+    public Optional<Properties> typedParameters() {
+        Set<String> selectedGroups = selectedGroups();
+        Properties typed = storedParameters(selectedGroups);
+        boolean converted = true;
+        for (String key : typedKeys(selectedGroups)) {
+            boolean read = readTypedValue(key, typed);
+            converted = converted && read;
+        }
+        if (!converted) {
+            return Optional.empty();
+        }
+        return Optional.of(typed);
+    }
+
     private void applyVisibility(AjaxRequestTarget targetOrNull) {
         ComponentVisibility.apply(rowsByKey, selectedGroups(), targetOrNull);
+    }
+
+    /** The keys of the fields shown, apart from the caching parameters. */
+    private List<String> typedKeys(Set<String> selectedGroups) {
+        List<String> keys = new ArrayList<>();
+        for (String key : rowsByKey.keySet()) {
+            if (isTypedKey(key, selectedGroups)) {
+                keys.add(key);
+            }
+        }
+        return keys;
+    }
+
+    /** The stored values of the selected backends and of the provider, as text. */
+    private Properties storedParameters(Set<String> selectedGroups) {
+        Properties stored = new Properties();
+        connectionParameters.getObject().forEach((key, value) -> {
+            if (value != null && isTypedKey(key, selectedGroups)) {
+                stored.setProperty(key, String.valueOf(value));
+            }
+        });
+        return stored;
+    }
+
+    /** A {@code storage.*} parameter shown for the selected backends, apart from the caching ones. */
+    private static boolean isTypedKey(String key, Set<String> selectedGroups) {
+        boolean storageKey = !StorageParamVisibility.groupOf(key).isEmpty();
+        return storageKey && !isCachingKey(key) && StorageParamVisibility.isVisible(key, selectedGroups);
+    }
+
+    /**
+     * Converts the input of the field of {@code key}, its inner fields first: a duration combines its amount and its
+     * unit. An input equal to the value shown leaves the stored value in {@code typed}.
+     *
+     * @return false when the input failed its conversion
+     */
+    private boolean readTypedValue(String key, Properties typed) {
+        FormComponent<?> field = ((ParamPanel<?>) fieldFor(key)).getFormComponent();
+        IVisitor<FormComponent<?>, Void> convert = (component, visit) -> component.validate();
+        FormComponent.visitFormComponentsPostOrder(field, convert);
+        if (!field.isValid()) {
+            return false;
+        }
+        Object input = field.getConvertedInput();
+        if (Objects.equals(input, field.getModelObject())) {
+            return true;
+        }
+        if (input == null || isUntickedOptionalFlag(field, input)) {
+            typed.remove(key);
+        } else {
+            typed.setProperty(key, String.valueOf(input));
+        }
+        return true;
+    }
+
+    /**
+     * An unticked box leaves an optional flag out, as a save does. The engine then applies its own rule for the flag,
+     * such as path style for a custom S3 endpoint. A typed {@code false} would replace that rule.
+     *
+     * <p>The field tells whether the flag is optional: only the box of an optional flag is built over an
+     * {@link OptionalFlagModel}. Asking the field keeps this read in step with the form.
+     */
+    private static boolean isUntickedOptionalFlag(FormComponent<?> field, Object input) {
+        return Boolean.FALSE.equals(input) && field.getDefaultModel() instanceof OptionalFlagModel;
     }
 
     private void dropParametersOfUnselectedBackends() {

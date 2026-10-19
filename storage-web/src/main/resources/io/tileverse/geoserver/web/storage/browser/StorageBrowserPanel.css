@@ -1,0 +1,47 @@
+.gs-panel-StorageBrowserPanel .gs-storage-browser-place .gs-panel-SimpleAjaxLink {
+    display: inline;
+}
+
+/*
+ * The panel fills the dialog and splits its height in two: the listing takes the space left, and the buttons sit below
+ * it. The listing scrolls on its own. GeoServer's table keeps its pagers and its search box at the edges of the
+ * listing. The rows never pass under the buttons.
+ *
+ * A shorter selector loses to GeoServer's rule "div.wicket-modal div.w_content_container", and the container keeps the
+ * height of its content.
+ */
+div.wicket-modal div.w_content_container:has(.gs-panel-StorageBrowserPanel) {
+    height: 100%;
+}
+
+.gs-panel-StorageBrowserPanel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.gs-panel-StorageBrowserPanel .gs-storage-browser-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.gs-panel-StorageBrowserPanel .gs-storage-browser-table {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+}
+
+/*
+ * GeoServer's theme lowers the table header by the height of the message bar at the top of the page. The listing
+ * scrolls inside the dialog. That bar takes no room there.
+ */
+.gs-panel-StorageBrowserPanel .table-header {
+    top: 0;
+}
+
+.gs-panel-StorageBrowserPanel .gs-storage-browser-buttons {
+    flex: none;
+    padding-top: 0.5rem;
+}

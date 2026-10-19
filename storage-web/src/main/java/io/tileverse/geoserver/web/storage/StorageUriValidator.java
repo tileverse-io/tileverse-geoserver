@@ -14,6 +14,8 @@ package io.tileverse.geoserver.web.storage;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -26,6 +28,9 @@ import org.apache.wicket.validation.ValidationError;
  * Checks, without any I/O, that a store URL resolves to a tileverse-storage provider. The provider registry is not
  * consulted for an {@code http(s):} URI because choosing between its candidate backends can send a network HEAD
  * request, while resolving any other scheme stays local.
+ *
+ * <p>The URI syntax rejects a path holding a space or a {@code %}. The validator accepts such a location when it reads
+ * as a filesystem path, because tileverse opens it as one.
  */
 public class StorageUriValidator implements IValidator<String> {
 
@@ -44,7 +49,7 @@ public class StorageUriValidator implements IValidator<String> {
     private static boolean namesAStorageLocation(String location) {
         URI uri = tryParse(location);
         if (uri == null) {
-            return false;
+            return isFilesystemPath(location);
         }
         String scheme = uri.getScheme();
         if (scheme == null || isRegistryExempt(scheme)) {
@@ -52,6 +57,49 @@ public class StorageUriValidator implements IValidator<String> {
         }
         Optional<String> providerId = StorageParams.providerSelectedBy(location);
         return providerId.isPresent();
+    }
+
+    /**
+     * Whether a location rejected by the URI syntax reads as a filesystem path. It must hold a path separator. A colon
+     * may come before the first separator only as the colon of a drive letter, as in {@code C:\data}. Any other colon
+     * before the first separator ends a URI scheme: the location is a malformed URI, not a path.
+     */
+    private static boolean isFilesystemPath(String location) {
+        int separator = firstSeparator(location);
+        if (separator < 0) {
+            return false;
+        }
+        int colon = location.indexOf(':');
+        boolean colonBeforeSeparator = colon >= 0 && colon < separator;
+        if (colonBeforeSeparator && !isDriveLetterColon(location, colon)) {
+            return false;
+        }
+        return parsesAsPath(location);
+    }
+
+    private static int firstSeparator(String location) {
+        int slash = location.indexOf('/');
+        int backslash = location.indexOf('\\');
+        if (slash < 0) {
+            return backslash;
+        }
+        if (backslash < 0) {
+            return slash;
+        }
+        return Math.min(slash, backslash);
+    }
+
+    private static boolean isDriveLetterColon(String location, int colon) {
+        return colon == 1 && Character.isLetter(location.charAt(0));
+    }
+
+    private static boolean parsesAsPath(String location) {
+        try {
+            Path.of(location);
+            return true;
+        } catch (InvalidPathException e) {
+            return false;
+        }
     }
 
     private static URI tryParse(String location) {
