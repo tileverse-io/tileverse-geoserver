@@ -15,16 +15,16 @@ custom store-edit panel. The `applicationContext.xml` here declares:
 
 ## Cloud storage panel
 
-`GeoParquetDataStoreEditPanel` and `StacDataStoreEditPanel` render the tileverse
-`storage.*` connection parameters through the shared storage section from
-[storage-web](../storage-web): a `storage.provider` selector as a segmented
-toggle (GeoParquet) or one checkbox per backend (STAC), then each backend's
-fields under a header, in the provider's declared order, showing only the
-selected backends. Booleans render as checkboxes, the AWS region as a
-searchable dropdown, retry delays as duration widgets, and secrets (keys,
-tokens, passwords) are masked. GeoParquet does not expose the memory-cache
-toggle, and saving a store drops a previously stored one: the engine applies
-its own caching default.
+`GeoParquetDataStoreEditPanel`, `IcebergDataStoreEditPanel` and
+`StacDataStoreEditPanel` render the tileverse `storage.*` connection parameters
+through the shared storage section from [storage-web](../storage-web): a
+`storage.provider` selector as a segmented toggle (GeoParquet and Iceberg) or
+one checkbox per backend (STAC), then each backend's fields under a header, in
+the provider's declared order, showing only the selected backends. Booleans
+render as checkboxes, the AWS region as a searchable dropdown, retry delays as
+duration widgets, and secrets (keys, tokens, passwords) are masked. GeoParquet
+and Iceberg do not expose the memory-cache toggle, and saving a store drops a
+previously stored one: the engine applies its own caching default.
 
 With no provider selected, the URL scheme selects the backend: `s3://`,
 `gs://`, `az://`, `abfs(s)://`, a local path, and plain HTTP for `http(s)://`.
@@ -37,6 +37,18 @@ their declared defaults as soon as their fields show (S3 path-style access on,
 for example), keeping the store stable across a change of an engine default,
 and saving the store drops the parameters of the other backends. With no
 backend selected, no backend parameter is kept.
+
+## Browsing for the location
+
+The location field of each store has a "Browse..." button. It opens a dialog
+over the storage named by the typed URL and storage parameters, and does not
+save the store. The dialog lists one folder at a time, with the name, file size
+and date of each entry. For a `.parquet` file it also shows the rows, row
+groups, primary geometry column, CRS and GeoParquet version. GeoParquet picks a
+file or a folder, Iceberg a table or warehouse folder, and STAC a catalog
+document or an items table. Local files follow GeoServer's file sandbox and
+`GEOSERVER_FILEBROWSER_HIDEFS`, as GeoServer's own file chooser does, and a
+local choice is written as an absolute `file:` URI.
 
 ## WFS output formats
 

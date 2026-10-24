@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<html xmlns:wicket="http://wicket.apache.org/">
+  <body>
+    <wicket:panel>
+      <div class="gs-panel-StorageLocationField gs-form">
+        <div class="gs-form-group">
+          <label wicket:id="paramName"></label>
+          <!-- The input group, the feedback and the dialog share one div because GeoServer's stylesheet
+               grows only the last child of a form group. -->
+          <div>
+            <div wicket:id="border" class="gs-input-group">
+              <input class="longtext" wicket:id="paramValue" type="text" size="100"/>
+              <a class="button" href="#" wicket:id="browse"><wicket:message key="StorageLocationField.browse">Browse...</wicket:message></a>
+            </div>
+            <div wicket:id="feedback"></div>
+            <!-- The store pages put the tooltip of the field on the tag around this panel. A browser shows the tooltip
+                 of the nearest ancestor with a title. The empty title keeps that tooltip off the dialog. -->
+            <div wicket:id="dialog" title=""></div>
+          </div>
+        </div>
+      </div>
+    </wicket:panel>
+  </body>
+</html>

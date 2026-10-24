@@ -15,11 +15,17 @@ package io.tileverse.geoserver.web.storage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
+import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.Model;
@@ -34,10 +40,17 @@ import org.geoserver.web.data.store.panel.TextParamPanel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import io.tileverse.storage.StorageConfig;
+
+import io.tileverse.geoserver.web.storage.browser.FileColumns;
+import io.tileverse.geoserver.web.storage.browser.GeoServerFixture;
+import io.tileverse.geoserver.web.storage.browser.PickMode;
+import io.tileverse.geoserver.web.storage.browser.StorageBrowsing;
+import io.tileverse.geoserver.web.storage.browser.StorageLocationField;
 
 import de.agilecoders.wicket.webjars.WicketWebjars;
 
@@ -46,6 +59,12 @@ class StorageAwareCoverageStoreEditPanelTest {
 
     /** {@code startComponentInPage} keeps the form's own id. */
     private static final String FORM_PATH = "form";
+
+    /** The text field of the URL panel, relative to the form. */
+    private static final String URL_TEXT_PATH = "panel:urlPanel:border:border_body:paramValue";
+
+    /** The Browse link of the URL panel, relative to the page. */
+    private static final String BROWSE_LINK_PATH = "form:panel:urlPanel:border:border_body:browse";
 
     private WicketTester tester;
 
@@ -129,7 +148,7 @@ class StorageAwareCoverageStoreEditPanelTest {
         FormComponent<?> region = ((ParamPanel<?>) storage.fieldFor("storage.s3.region")).getFormComponent();
 
         FormTester formTester = tester.newFormTester(FORM_PATH);
-        formTester.setValue("panel:urlPanel:border:border_body:paramValue", "s3://bucket/key.tif");
+        formTester.setValue(URL_TEXT_PATH, "s3://bucket/key.tif");
         formTester.setValue(region, "us-west-2");
         formTester.submit();
 
@@ -198,6 +217,75 @@ class StorageAwareCoverageStoreEditPanelTest {
                 .isGreaterThan(fieldOfTheSubclass);
     }
 
+    @Test
+    void browsingAddsABrowseButton() {
+        BundleEntry.define(tester, "TestPanel.urlPlaceholder.tooltip", "One file, or a folder of them");
+
+        BrowsingTestPanel panel = renderBrowsingPanel(newStore());
+
+        StorageLocationField urlField = (StorageLocationField) panel.get("urlPanel");
+        TagTester urlTag = tester.getTagByWicketId("urlPanel");
+
+        assertThat(urlField.getFormComponent().isRequired()).isTrue();
+        assertThat(urlTag.getAttribute("title")).isEqualTo("One file, or a folder of them");
+        tester.assertComponent(BROWSE_LINK_PATH, AjaxSubmitLink.class);
+    }
+
+    @Test
+    void browseLeavesTheStoreAsItWas(@TempDir Path folder) throws IOException {
+        Path scenes = Files.createDirectories(folder.resolve("scenes"));
+        GeoServerFixture.sandboxedTo(folder, folder);
+        try {
+            CoverageStoreInfo storeInfo = newStore(new HashMap<>(Map.of(StorageConfig.PROVIDER_ID_KEY, "file")));
+            storeInfo.setURL("/stored/x.tif");
+            renderBrowsingPanel(storeInfo);
+            Map<String, Serializable> rendered = new HashMap<>(storeInfo.getConnectionParameters());
+            FormTester form = tester.newFormTester(FORM_PATH, false);
+            form.setValue(URL_TEXT_PATH, scenes.toString());
+
+            tester.executeAjaxEvent(BROWSE_LINK_PATH, "click");
+
+            assertThat(tester.getLastResponseAsString()).contains("gs-panel-StorageBrowserPanel");
+            assertThat(storeInfo.getURL()).isEqualTo("/stored/x.tif");
+            assertThat(storeInfo.getConnectionParameters()).isEqualTo(rendered);
+        } finally {
+            GeoServerFixture.clear();
+        }
+    }
+
+    @Test
+    void browsingKeepsTheUrlValidation() {
+        renderBrowsingPanel(newStore());
+        FormTester form = tester.newFormTester(FORM_PATH);
+        form.setValue(URL_TEXT_PATH, "not a location");
+
+        form.submit();
+
+        assertThat(tester.getMessages(FeedbackMessage.ERROR)).isNotEmpty();
+    }
+
+    @Test
+    void aBadStorageValueStopsBrowse(@TempDir Path folder) {
+        GeoServerFixture.sandboxedTo(folder, folder);
+        try {
+            renderBrowsingPanel(newStore(new HashMap<>(Map.of(StorageConfig.PROVIDER_ID_KEY, "http"))));
+            StorageParamsPanel storage =
+                    (StorageParamsPanel) tester.getComponentFromLastRenderedPage("form:panel:storageParams");
+            FormComponent<?> timeout =
+                    ((ParamPanel<?>) storage.fieldFor("storage.http.timeout-millis")).getFormComponent();
+            FormTester form = tester.newFormTester(FORM_PATH, false);
+            form.setValue(URL_TEXT_PATH, folder.toString());
+            form.setValue(timeout, "soon");
+
+            tester.executeAjaxEvent(BROWSE_LINK_PATH, "click");
+
+            assertThat(tester.getLastResponseAsString()).doesNotContain("gs-panel-StorageBrowserPanel");
+            assertThat(timeout.hasErrorMessage()).isTrue();
+        } finally {
+            GeoServerFixture.clear();
+        }
+    }
+
     private TestPanel renderPanel(CoverageStoreInfo storeInfo) {
         Form<CoverageStoreInfo> form = new Form<>("form", new Model<>(storeInfo));
         TestPanel panel = new TestPanel("panel", form);
@@ -211,6 +299,14 @@ class StorageAwareCoverageStoreEditPanelTest {
         ExtendingCoverageStoreEditPanel panel = new ExtendingCoverageStoreEditPanel("panel", form);
         form.add(panel);
         tester.startComponentInPage(form);
+    }
+
+    private BrowsingTestPanel renderBrowsingPanel(CoverageStoreInfo storeInfo) {
+        Form<CoverageStoreInfo> form = new Form<>(FORM_PATH, new Model<>(storeInfo));
+        BrowsingTestPanel panel = new BrowsingTestPanel("panel", form);
+        form.add(panel);
+        tester.startComponentInPage(form);
+        return panel;
     }
 
     /** The offset of the tag of a component in the last response, negative when the component did not render. */
@@ -249,11 +345,18 @@ class StorageAwareCoverageStoreEditPanelTest {
     }
 
     private static Stream<String> recognizedStorageLocations() {
-        return Stream.of("s3://bucket/key.tif", "https://host/x.tif", "/data/x.tif");
+        return Stream.of(
+                "s3://bucket/key.tif",
+                "https://host/x.tif",
+                "/data/x.tif",
+                "/data/my dir/x.tif",
+                "/data/50%.tif",
+                "/data/a#b.tif",
+                "C:\\data\\x.tif");
     }
 
     private static Stream<String> unrecognizedStorageLocations() {
-        return Stream.of("notaurl://", "://missing-scheme");
+        return Stream.of("notaurl://", "://missing-scheme", "not a location", "s3:/my bucket/x.tif");
     }
 
     private static boolean isValid(String location) {
@@ -271,6 +374,23 @@ class StorageAwareCoverageStoreEditPanelTest {
         @Override
         protected boolean cachingParameters() {
             return false;
+        }
+
+        @Override
+        protected String urlPlaceholderKey() {
+            return "TestPanel.urlPlaceholder";
+        }
+    }
+
+    private static final class BrowsingTestPanel extends StorageAwareCoverageStoreEditPanel {
+
+        BrowsingTestPanel(String id, Form storeEditForm) {
+            super(id, storeEditForm);
+        }
+
+        @Override
+        protected Optional<StorageBrowsing> browsing() {
+            return Optional.of(StorageBrowsing.of(PickMode.FILE_OR_FOLDER, FileColumns.NONE));
         }
 
         @Override
