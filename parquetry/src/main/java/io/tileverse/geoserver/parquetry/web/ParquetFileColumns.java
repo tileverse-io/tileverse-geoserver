@@ -323,10 +323,14 @@ public final class ParquetFileColumns implements FileColumns {
         return primary.map(ParquetFileColumns::geoCrsNameOf);
     }
 
-    /** The CRS of a column in the {@code geo} value: OGC:CRS84 when the column declares none. */
+    /**
+     * The name of the CRS of a column in the {@code geo} value. The engine gives the geometry type of the column the
+     * same CRS: OGC:CRS84 when the column has no {@code crs} key, and {@code srid:0} when the {@code crs} is null,
+     * meaning unknown.
+     */
     private static String geoCrsNameOf(GeoColumn column) {
-        Optional<CoordinateReferenceSystem> crs = column.crs();
-        return crs.map(ParquetFileColumns::projjsonNameOf).orElse(DEFAULT_CRS);
+        Optional<ParquetCrs> crs = column.crs().nativeCrs();
+        return crs.map(ParquetFileColumns::nameOf).orElse(DEFAULT_CRS);
     }
 
     /**
