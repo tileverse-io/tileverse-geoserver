@@ -192,6 +192,9 @@ class ParquetFileColumnsTest {
         String withCrs = """
                 {"version": "1.1.0", "primary_column": "geometry", "columns": {"geometry": {"encoding": "WKB",
                 "crs": {"type": "GeographicCRS", "name": "My CRS"}}}}""";
+        String unknownCrs = """
+                {"version": "1.1.0", "primary_column": "geometry", "columns": {"geometry": {"encoding": "WKB",
+                "crs": null}}}""";
         Map<String, ColumnValue> noCrs = Map.of(
                 ParquetFileColumns.GEOMETRY, ColumnValue.text("geom (WKB)"),
                 ParquetFileColumns.GEOPARQUET, ColumnValue.text("1.1.0"));
@@ -217,6 +220,8 @@ class ParquetFileColumnsTest {
                         withCrs,
                         plainGeometry,
                         cells("geometry (WKB)", "My CRS", "1.1.0")),
+                Arguments.argumentSet(
+                        "an unknown CRS", unknownCrs, noColumns, cells("geometry (WKB)", "srid:0", "1.1.0")),
                 Arguments.argumentSet(
                         "a native geography column",
                         valid,
