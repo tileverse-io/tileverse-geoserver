@@ -71,7 +71,7 @@
 
     <!-- This branch tracks the GeoServer 3.0 stable series. -->
     <gs.version>3.0.2</gs.version>
-    <wicket.version>10.11.0</wicket.version>
+    <wicket.version>10.12.0</wicket.version>
     <!-- GeoTools matching gs.version; the pair moves in lockstep (GeoServer main tracks GeoTools main). -->
     <gt.version>35.2</gt.version>
     <!-- Jetty used only by the test-scope embedded launcher (Start); keep in step with GeoServer's Jetty. -->
