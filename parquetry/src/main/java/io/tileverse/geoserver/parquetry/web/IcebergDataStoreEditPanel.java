@@ -27,8 +27,8 @@ import io.tileverse.geoserver.web.storage.browser.StorageBrowsing;
 import io.tileverse.parquetry.geotools.iceberg.IcebergDataStoreFactory;
 
 /**
- * A store edit panel for the Iceberg DataStore. As for GeoParquet, it offers one storage provider and no caching
- * parameters. The URL field browses for a folder: a table, or a warehouse root. It has no format columns, because an
+ * A store edit panel for the Iceberg DataStore. As for GeoParquet, it offers one storage provider and the memory cache
+ * toggle. The URL field browses for a folder: a table, or a warehouse root. It has no format columns, because an
  * Iceberg table is a folder of files, not one file.
  *
  * <p>Adapted from GeoServer's {@code PMTilesDataStoreEditPanel} (c) Open Source Geospatial Foundation, GPL-2.0.
@@ -40,7 +40,7 @@ public class IcebergDataStoreEditPanel extends StorageAwareDataStoreEditPanel {
     private static final String LOCATION_KEY = IcebergDataStoreFactory.ICEBERG_URI.key;
 
     public IcebergDataStoreEditPanel(String componentId, Form<DataStoreInfo> storeEditForm) {
-        super(componentId, storeEditForm, BackendSelection.SINGLE_PROVIDER, false, List.of(LOCATION_KEY));
+        super(componentId, storeEditForm, BackendSelection.SINGLE_PROVIDER, true, List.of(LOCATION_KEY));
     }
 
     @Override

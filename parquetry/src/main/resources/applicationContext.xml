@@ -90,4 +90,7 @@
     <property name="available" value="true"/>
     <property name="enabled" value="true"/>
   </bean>
+
+  <!-- Clears the parquetry caches when GeoServer resets or reloads. -->
+  <bean id="parquetryCachesReset" class="io.tileverse.geoserver.parquetry.ParquetryCachesReset"/>
 </beans>

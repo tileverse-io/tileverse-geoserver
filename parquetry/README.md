@@ -9,9 +9,11 @@ its `DataStoreFactorySpi` from that jar. This module adds the Spring wiring and 
 custom store-edit panel. The `applicationContext.xml` here declares:
 
 - a `DataStorePanelInfo` binding `GeoParquetDataStoreFactory` to the custom
-  `GeoParquetDataStoreEditPanel` (see below), and
+  `GeoParquetDataStoreEditPanel` (see below),
 - a `ModuleStatusImpl` per feature: each store type and each WFS output format
-  reports its own row under About > Server Status > Modules.
+  reports its own row under About > Server Status > Modules, and
+- a `GeoServerLifecycleHandler` clearing the caches of parquetry (footers,
+  learned page indexes, byte ranges) when GeoServer resets or reloads.
 
 ## Cloud storage panel
 
@@ -22,9 +24,10 @@ through the shared storage section from [storage-web](../storage-web): a
 one checkbox per backend (STAC), then each backend's fields under a header, in
 the provider's declared order, showing only the selected backends. Booleans
 render as checkboxes, the AWS region as a searchable dropdown, retry delays as
-duration widgets, and secrets (keys, tokens, passwords) are masked. GeoParquet
-and Iceberg do not expose the memory-cache toggle, and saving a store drops a
-previously stored one: the engine applies its own caching default.
+duration widgets, and secrets (keys, tokens, passwords) are masked. For a
+remote backend, the memory-cache toggle comes first, ticked: the parquetry
+stores cache the byte ranges read from remote storage unless a store turns the
+cache off. Local files have no byte-range cache.
 
 With no provider selected, the URL scheme selects the backend: `s3://`,
 `gs://`, `az://`, `abfs(s)://`, a local path, and plain HTTP for `http(s)://`.
@@ -34,9 +37,10 @@ instance, opens with the backend of its URL selected.
 
 A store keeps the parameters of its selected backends only. The panel stores
 their declared defaults as soon as their fields show (S3 path-style access on,
-for example), keeping the store stable across a change of an engine default,
-and saving the store drops the parameters of the other backends. With no
-backend selected, no backend parameter is kept.
+for example), keeping the store stable across a change of an engine default.
+A default declared by the store wins over the one declared by tileverse: the
+memory cache starts ticked. Saving the store drops the parameters of the other
+backends. With no backend selected, no backend parameter is kept.
 
 ## Browsing for the location
 
