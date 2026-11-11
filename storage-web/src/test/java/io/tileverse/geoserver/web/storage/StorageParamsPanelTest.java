@@ -376,6 +376,51 @@ class StorageParamsPanelTest {
         assertThat(params).containsEntry("storage.s3.requester-pays", Boolean.TRUE);
     }
 
+    // tileverse declares the cache off; the store declares it on.
+    @Test
+    void storeDefaultBeatsTileverse() {
+        params.put(PROVIDER, "s3");
+
+        renderPanel(BackendSelection.SINGLE_PROVIDER, Map.of("storage.caching.enabled", Boolean.TRUE));
+
+        assertThat(params).containsEntry("storage.caching.enabled", Boolean.TRUE);
+    }
+
+    @Test
+    void storedValueBeatsStoreDefault() {
+        params.put(PROVIDER, "s3");
+        params.put("storage.caching.enabled", Boolean.FALSE);
+
+        renderPanel(BackendSelection.SINGLE_PROVIDER, Map.of("storage.caching.enabled", Boolean.TRUE));
+
+        assertThat(params).containsEntry("storage.caching.enabled", Boolean.FALSE);
+    }
+
+    @Test
+    void storeDefaultTakesFieldForm() {
+        params.put(PROVIDER, "azure");
+
+        renderPanel(BackendSelection.SINGLE_PROVIDER, Map.of("storage.azure.max-retries", "5"));
+
+        assertThat(params).containsEntry("storage.azure.max-retries", 5);
+    }
+
+    // The flag has no default in tileverse. With the store's, an unticked box is stored, not left to the store.
+    @Test
+    void untickedStoreDefaultIsStored() {
+        params.put(PROVIDER, "s3");
+        StorageParamsPanel panel =
+                renderPanel(BackendSelection.SINGLE_PROVIDER, Map.of("storage.s3.force-path-style", Boolean.TRUE));
+        FormComponent<?> pathStyle = formComponent(panel, "storage.s3.force-path-style");
+
+        FormTester form = tester.newFormTester("form");
+        form.setValue(pathStyle, "false");
+        form.submit();
+
+        tester.assertNoErrorMessage();
+        assertThat(params).containsEntry("storage.s3.force-path-style", Boolean.FALSE);
+    }
+
     @Test
     void seedsADefaultInTheFormWrittenByItsField() {
         params.put(PROVIDER, "azure");
@@ -744,6 +789,15 @@ class StorageParamsPanelTest {
     private StorageParamsPanel renderPanel(BackendSelection selection, boolean cachingParameters) {
         Form<Void> form = new Form<>("form");
         StorageParamsPanel panel = new StorageParamsPanel("panel", paramsModel, selection, cachingParameters);
+        form.add(panel);
+        tester.startComponentInPage(form);
+        return panel;
+    }
+
+    private StorageParamsPanel renderPanel(BackendSelection selection, Map<String, Serializable> storeDefaults) {
+        Form<Void> form = new Form<>("form");
+        StorageParamsPanel panel =
+                new StorageParamsPanel("panel", paramsModel, new Model<>(), selection, true, storeDefaults);
         form.add(panel);
         tester.startComponentInPage(form);
         return panel;
