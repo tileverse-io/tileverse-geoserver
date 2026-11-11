@@ -46,8 +46,8 @@ import io.tileverse.storage.StorageParameter;
  *
  * <p>A store keeps the parameters of its selected backends only: the section stores their declared defaults as soon as
  * their rows show, and a submit drops the parameters of the other backends. A stored default keeps the store stable
- * across a change of the engine's default. A Boolean parameter without a declared default is stored once its box is
- * ticked, and left to the engine until then.
+ * across a change of the engine's default. A default declared by the store wins over the one declared by tileverse. A
+ * Boolean parameter without a default is stored once its box is ticked, and left to the engine until then.
  *
  * <p>A single-provider store naming no provider is served by the backend selected by its URL, and opens with that
  * backend selected.
@@ -79,7 +79,10 @@ public class StorageParamsPanel extends Panel implements IFormModelUpdateListene
     /** Keyed by parameter key, in render order. */
     private final Map<String, Component> rowsByKey = new LinkedHashMap<>();
 
-    /** Keyed by parameter key, in the form written by the parameter's field. */
+    /**
+     * Keyed by parameter key, in the form written by the parameter's field: the store's own default, else the one
+     * declared by tileverse.
+     */
     private final Map<String, Serializable> declaredDefaults;
 
     /** Set only for {@link BackendSelection#MULTIPLE_BACKENDS}. */
@@ -104,6 +107,22 @@ public class StorageParamsPanel extends Panel implements IFormModelUpdateListene
             IModel<String> location,
             BackendSelection selection,
             boolean cachingParameters) {
+        this(id, connectionParameters, location, selection, cachingParameters, Map.of());
+    }
+
+    /**
+     * @param location the store URL, read once, when the panel opens; a single-provider store naming no provider opens
+     *     on the backend selected by it
+     * @param storeDefaults the defaults declared by the store for some of its storage parameters, by key; each wins
+     *     over the default declared by tileverse
+     */
+    public StorageParamsPanel(
+            String id,
+            IModel<Map<String, Serializable>> connectionParameters,
+            IModel<String> location,
+            BackendSelection selection,
+            boolean cachingParameters,
+            Map<String, Serializable> storeDefaults) {
         super(id);
         this.connectionParameters = connectionParameters;
         this.selection = selection;
@@ -114,7 +133,7 @@ public class StorageParamsPanel extends Panel implements IFormModelUpdateListene
             selectTheProviderOfTheLocationUnlessStored(location);
         }
         List<StorageParameter<?>> parameters = StorageParams.orderedParameters(cachingParameters);
-        this.declaredDefaults = declaredDefaults(parameters);
+        this.declaredDefaults = declaredDefaults(parameters, storeDefaults);
         add(selector());
         add(rows(parameters));
         seedDeclaredDefaults();
@@ -275,13 +294,24 @@ public class StorageParamsPanel extends Panel implements IFormModelUpdateListene
         providerId.ifPresent(id -> stored.put(PROVIDER_KEY, id));
     }
 
-    private static Map<String, Serializable> declaredDefaults(List<StorageParameter<?>> parameters) {
+    private static Map<String, Serializable> declaredDefaults(
+            List<StorageParameter<?>> parameters, Map<String, Serializable> storeDefaults) {
         Map<String, Serializable> defaults = new LinkedHashMap<>();
         for (StorageParameter<?> parameter : parameters) {
-            Optional<Serializable> storedDefault = StorageParamInputs.storedDefault(parameter);
-            storedDefault.ifPresent(value -> defaults.put(parameter.key(), value));
+            Serializable storeDefault = storeDefaults.get(parameter.key());
+            Optional<Serializable> value = defaultOf(parameter, storeDefault);
+            value.ifPresent(stored -> defaults.put(parameter.key(), stored));
         }
         return defaults;
+    }
+
+    /** The store's own default when it converts to the type of the parameter, else the one declared by tileverse. */
+    private static Optional<Serializable> defaultOf(StorageParameter<?> parameter, Serializable storeDefault) {
+        Optional<Serializable> fromStore = StorageParamInputs.storedForm(parameter, storeDefault);
+        if (fromStore.isPresent()) {
+            return fromStore;
+        }
+        return StorageParamInputs.storedDefault(parameter);
     }
 
     private Component selector() {
@@ -360,7 +390,8 @@ public class StorageParamsPanel extends Panel implements IFormModelUpdateListene
     }
 
     private GroupedParamPanel row(String id, StorageParameter<?> parameter, boolean firstOfGroup) {
-        Panel field = StorageParamInputs.inputFor(connectionParameters, parameter);
+        boolean hasDefault = declaredDefaults.containsKey(parameter.key());
+        Panel field = StorageParamInputs.inputFor(connectionParameters, parameter, hasDefault);
         IModel<String> header = firstOfGroup ? headerModel(parameter.group()) : null;
         GroupedParamPanel row = new GroupedParamPanel(id, field, header);
         // Ajax can re-render a hidden row only through its placeholder tag
