@@ -9,9 +9,11 @@ its `DataStoreFactorySpi` from that jar. This module adds the Spring wiring and 
 custom store-edit panel. The `applicationContext.xml` here declares:
 
 - a `DataStorePanelInfo` binding `GeoParquetDataStoreFactory` to the custom
-  `GeoParquetDataStoreEditPanel` (see below), and
+  `GeoParquetDataStoreEditPanel` (see below),
 - a `ModuleStatusImpl` per feature: each store type and each WFS output format
-  reports its own row under About > Server Status > Modules.
+  reports its own row under About > Server Status > Modules, and
+- a `GeoServerLifecycleHandler` clearing the caches of parquetry (footers,
+  learned page indexes, byte ranges) when GeoServer resets or reloads.
 
 ## Cloud storage panel
 
