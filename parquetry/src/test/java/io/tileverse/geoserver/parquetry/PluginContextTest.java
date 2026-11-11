@@ -14,9 +14,11 @@ package io.tileverse.geoserver.parquetry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.stream.Stream;
 
 import org.geoserver.config.impl.GeoServerImpl;
+import org.geoserver.config.impl.GeoServerLifecycleHandler;
 import org.geoserver.platform.ModuleStatus;
 import org.geoserver.platform.ModuleStatusImpl;
 import org.geoserver.web.data.resource.DataStorePanelInfo;
@@ -39,13 +41,22 @@ import io.tileverse.parquetry.geotools.iceberg.IcebergDataStoreFactory;
 import io.tileverse.parquetry.geotools.parquet.GeoParquetDataStoreFactory;
 import io.tileverse.parquetry.geotools.parquet.StacDataStoreFactory;
 
+import io.tileverse.cache.Cache;
+import io.tileverse.cache.CacheManager;
+import io.tileverse.cache.CachePool;
+import io.tileverse.cache.PartitionSpec;
+
 /**
  * Loads the plugin's {@code applicationContext.xml} the same way GeoServer does (Spring bean definitions at the jar
  * root) and asserts the store-panel, module-status, and WFS output format beans are wired to their factories and
- * formats. A parent context supplies the {@code geoServer} singleton the output format beans depend on, the same way
- * GeoServer's own application context does at runtime.
+ * formats, and that a reset clears the caches. A parent context supplies the {@code geoServer} singleton the output
+ * format beans depend on, the same way GeoServer's own application context does at runtime.
  */
 class PluginContextTest {
+
+    /** A cache of the shared manager for the reset check, each entry weighing one byte. */
+    private static final PartitionSpec<String, String> ONE_BYTE_ENTRIES =
+            new PartitionSpec<>((key, value) -> 1, Duration.ofMinutes(1));
 
     private ClassPathXmlApplicationContext context;
 
@@ -124,6 +135,19 @@ class PluginContextTest {
 
         assertThat(factory.getDisplayName()).isEqualTo("Parquet");
         assertThat(factory.isAvailable()).isTrue();
+    }
+
+    // A reload of GeoServer resets first. The footers and byte ranges of parquetry live in the shared caches.
+    @Test
+    void resetClearsTheCaches() {
+        Cache<String, String> cache =
+                CacheManager.getDefault().partition(CachePool.METADATA, "plugin-context-test", ONE_BYTE_ENTRIES);
+        cache.get("key", key -> "value");
+        GeoServerLifecycleHandler handler = context.getBean("parquetryCachesReset", GeoServerLifecycleHandler.class);
+
+        handler.onReset();
+
+        assertThat(cache.getIfPresent("key")).isNull();
     }
 
     @Test
