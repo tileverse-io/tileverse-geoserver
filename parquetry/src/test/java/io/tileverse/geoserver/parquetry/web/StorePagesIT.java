@@ -50,6 +50,10 @@ import io.tileverse.parquetry.geotools.parquet.StacDataStoreFactory;
  */
 public class StorePagesIT extends GeoServerWicketTestSupport {
 
+    private static final String CACHING_KEY = "storage.caching.enabled";
+
+    private static final String PROVIDER_KEY = "storage.provider";
+
     @Before
     public void logIn() {
         login();
@@ -106,6 +110,28 @@ public class StorePagesIT extends GeoServerWicketTestSupport {
         assertEquals(Boolean.TRUE, cachingFlagOf(storage));
     }
 
+    @Test
+    public void geoParquetCachesByDefault() {
+        String type = new GeoParquetDataStoreFactory().getDisplayName();
+        Map<String, Serializable> parameters =
+                Map.of(GeoParquetDataStoreFactory.GEOPARQUET_URI.key, "s3://bucket/file.parquet", PROVIDER_KEY, "s3");
+
+        StorageParamsPanel storage = openEditPage("geoparquet", type, parameters);
+
+        assertEquals(Boolean.TRUE, cachingFlagOf(storage));
+    }
+
+    @Test
+    public void icebergCachesByDefault() {
+        String type = new IcebergDataStoreFactory().getDisplayName();
+        Map<String, Serializable> parameters =
+                Map.of(IcebergDataStoreFactory.ICEBERG_URI.key, "s3://bucket/warehouse/table", PROVIDER_KEY, "s3");
+
+        StorageParamsPanel storage = openEditPage("iceberg", type, parameters);
+
+        assertEquals(Boolean.TRUE, cachingFlagOf(storage));
+    }
+
     /** The one location field of the page: each store type browses one parameter. */
     private StorageLocationField openNewStorePage(String storeType) {
         tester.startPage(new DataAccessNewPage(storeType));
@@ -136,8 +162,12 @@ public class StorePagesIT extends GeoServerWicketTestSupport {
         return found.get(0);
     }
 
+    /** The box of the caching row, which the page shows for a remote backend. */
     private static Boolean cachingFlagOf(StorageParamsPanel storage) {
-        ParamPanel<?> field = (ParamPanel<?>) storage.fieldFor("storage.caching.enabled");
+        Component row = storage.rowFor(CACHING_KEY);
+        assertNotNull("the page has a caching row", row);
+        assertTrue("the caching row shows", row.isVisible());
+        ParamPanel<?> field = (ParamPanel<?>) storage.fieldFor(CACHING_KEY);
         return (Boolean) field.getFormComponent().getModelObject();
     }
 

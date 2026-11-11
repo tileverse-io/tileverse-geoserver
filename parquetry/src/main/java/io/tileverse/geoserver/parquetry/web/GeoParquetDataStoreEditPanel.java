@@ -26,9 +26,9 @@ import io.tileverse.geoserver.web.storage.browser.StorageBrowsing;
 import io.tileverse.parquetry.geotools.parquet.GeoParquetDataStoreFactory;
 
 /**
- * A store edit panel for the GeoParquet DataStore. The shared storage section renders the provider selector and the
- * selected backend's connection fields; caching is not exposed because the engine applies its own default. The URL
- * field browses for a GeoParquet file or a folder of them, with the Parquet columns.
+ * A store edit panel for the GeoParquet DataStore. The shared storage section renders the provider selector, the
+ * selected backend's connection fields, and the memory cache toggle for a remote backend, ticked by the store's
+ * default. The URL field browses for a GeoParquet file or a folder of them, with the Parquet columns.
  *
  * <p>Adapted from GeoServer's {@code PMTilesDataStoreEditPanel} (c) Open Source Geospatial Foundation, GPL-2.0.
  */
@@ -39,7 +39,7 @@ public class GeoParquetDataStoreEditPanel extends StorageAwareDataStoreEditPanel
     private static final String LOCATION_KEY = GeoParquetDataStoreFactory.GEOPARQUET_URI.key;
 
     public GeoParquetDataStoreEditPanel(String componentId, Form<DataStoreInfo> storeEditForm) {
-        super(componentId, storeEditForm, BackendSelection.SINGLE_PROVIDER, false, List.of(LOCATION_KEY));
+        super(componentId, storeEditForm, BackendSelection.SINGLE_PROVIDER, true, List.of(LOCATION_KEY));
     }
 
     @Override
