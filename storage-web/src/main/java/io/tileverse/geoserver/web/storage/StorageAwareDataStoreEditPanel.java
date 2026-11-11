@@ -12,8 +12,11 @@
  */
 package io.tileverse.geoserver.web.storage;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,12 +31,15 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.ResourceModel;
 import org.geoserver.catalog.DataStoreInfo;
 import org.geoserver.catalog.NamespaceInfo;
+import org.geoserver.catalog.ResourcePool;
 import org.geoserver.catalog.StoreInfo;
 import org.geoserver.catalog.WorkspaceInfo;
 import org.geoserver.web.GeoServerApplication;
 import org.geoserver.web.data.store.DefaultDataStoreEditPanel;
 import org.geoserver.web.data.store.ParamInfo;
 import org.geoserver.web.util.MapModel;
+import org.geotools.api.data.DataAccessFactory;
+import org.geotools.api.data.DataAccessFactory.Param;
 
 import io.tileverse.geoserver.web.storage.StorageParamsPanel.BackendSelection;
 import io.tileverse.geoserver.web.storage.browser.StorageBrowsing;
@@ -43,6 +49,9 @@ import io.tileverse.geoserver.web.storage.browser.StorageLocationField;
  * Base store edit panel for the parquetry DataStores: GeoServer's stock panel renders the core parameters, and one
  * {@link StorageParamsPanel} takes the row of the first {@code storage.*} parameter, blanking the other storage rows.
  * The section thus appears where the factory lists its storage parameters, with no markup slot needed in subclasses.
+ *
+ * <p>A {@code storage.*} parameter declared by the store's factory with a default of its own seeds that default, over
+ * the one declared by tileverse: a store may turn the byte-range cache on by default, for instance.
  *
  * <p>A subclass returning a {@link StorageBrowsing} from {@link #browsing(String)} for a location parameter gets a
  * "Browse..." button next to its field.
@@ -61,6 +70,9 @@ public abstract class StorageAwareDataStoreEditPanel extends DefaultDataStoreEdi
 
     /** The connection parameters able to hold the store URL, one per store type edited by the panel. */
     private final List<String> locationKeys;
+
+    /** The defaults declared by the store's factory for its {@code storage.*} parameters, by key. */
+    private final Map<String, Serializable> storeDefaults;
 
     /**
      * Created once, for the first {@code storage.*} parameter; relies on GeoServer's parameter list reusing its items,
@@ -94,6 +106,30 @@ public abstract class StorageAwareDataStoreEditPanel extends DefaultDataStoreEdi
         this.selection = selection;
         this.cachingParameters = cachingParameters;
         this.locationKeys = List.copyOf(locationKeys);
+        this.storeDefaults = storageDefaultsOf(storeEditForm.getModelObject());
+    }
+
+    /**
+     * The defaults of the {@code storage.*} parameters declared by the factory of the store. A deprecated parameter has
+     * none, as on GeoServer's own page.
+     */
+    private static Map<String, Serializable> storageDefaultsOf(DataStoreInfo store) {
+        Map<String, Serializable> defaults = new HashMap<>();
+        for (Param param : factoryOf(store).getParametersInfo()) {
+            if (isStorageParam(param.key) && !param.isDeprecated() && param.sample instanceof Serializable sample) {
+                defaults.put(param.key, sample);
+            }
+        }
+        return defaults;
+    }
+
+    private static DataAccessFactory factoryOf(DataStoreInfo store) {
+        ResourcePool resourcePool = GeoServerApplication.get().getCatalog().getResourcePool();
+        try {
+            return resourcePool.getDataStoreFactory(store);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /**
@@ -165,7 +201,8 @@ public abstract class StorageAwareDataStoreEditPanel extends DefaultDataStoreEdi
         }
         if (storageSection == null) {
             IModel<String> location = () -> locationIn(paramsModel.getObject());
-            storageSection = new StorageParamsPanel(componentId, paramsModel, location, selection, cachingParameters);
+            storageSection = new StorageParamsPanel(
+                    componentId, paramsModel, location, selection, cachingParameters, storeDefaults);
             return storageSection;
         }
         return placeholder(componentId);
