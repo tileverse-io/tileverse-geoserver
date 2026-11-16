@@ -14,15 +14,18 @@ package io.tileverse.geoserver.parquetry.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.geoserver.web.ToolLinkInfo;
 import org.geoserver.web.data.resource.DataStorePanelInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import io.tileverse.geoserver.parquetry.migration.CommunityGeoParquetMigration;
 import io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel;
 import io.tileverse.geoserver.parquetry.web.IcebergDataStoreEditPanel;
 import io.tileverse.geoserver.parquetry.web.StacDataStoreEditPanel;
+import io.tileverse.geoserver.web.storage.migration.StoreMigrationPage;
 
 import io.tileverse.parquetry.geotools.iceberg.IcebergDataStoreFactory;
 import io.tileverse.parquetry.geotools.parquet.GeoParquetDataStoreFactory;
@@ -58,6 +61,18 @@ class StoreConfigurationTest {
         assertThat(panel.getFactoryClass()).isEqualTo(GeoParquetDataStoreFactory.class);
         assertThat(panel.getComponentClass()).isEqualTo(GeoParquetDataStoreEditPanel.class);
         assertThat(panel.getIcon()).isEqualTo("img/icons/parquetry.svg");
+    }
+
+    @Test
+    void migrationConfigurationStandsAlone() {
+        try (AnnotationConfigApplicationContext migrationContext =
+                new AnnotationConfigApplicationContext(GeoParquetMigrationConfiguration.class)) {
+            Object migration = migrationContext.getBean("communityGeoParquetMigration");
+            ToolLinkInfo link = migrationContext.getBean("storeMigrationToolLink", ToolLinkInfo.class);
+
+            assertThat(migration).isInstanceOf(CommunityGeoParquetMigration.class);
+            assertThat(link.getComponentClass()).isEqualTo(StoreMigrationPage.class);
+        }
     }
 
     @Test

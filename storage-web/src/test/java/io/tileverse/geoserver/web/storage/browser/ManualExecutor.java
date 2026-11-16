@@ -16,8 +16,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.Executor;
 
-/** Runs the submitted reads only when told: a test sees how many are running and finishes them one at a time. */
-final class ManualExecutor implements Executor {
+/** Runs the submitted tasks only when told: a test sees how many are waiting and finishes them one at a time. */
+public final class ManualExecutor implements Executor {
 
     private final Deque<Runnable> pending = new ArrayDeque<>();
 
@@ -26,11 +26,11 @@ final class ManualExecutor implements Executor {
         pending.add(task);
     }
 
-    synchronized int pending() {
+    public synchronized int pending() {
         return pending.size();
     }
 
-    void runNext() {
+    public void runNext() {
         Runnable task;
         synchronized (this) {
             task = pending.poll();
@@ -38,7 +38,7 @@ final class ManualExecutor implements Executor {
         task.run();
     }
 
-    void runAll() {
+    public void runAll() {
         while (pending() > 0) {
             runNext();
         }

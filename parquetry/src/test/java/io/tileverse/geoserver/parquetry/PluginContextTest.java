@@ -15,12 +15,14 @@ package io.tileverse.geoserver.parquetry;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.geoserver.config.impl.GeoServerImpl;
 import org.geoserver.config.impl.GeoServerLifecycleHandler;
 import org.geoserver.platform.ModuleStatus;
 import org.geoserver.platform.ModuleStatusImpl;
+import org.geoserver.web.ToolLinkInfo;
 import org.geoserver.web.data.resource.DataStorePanelInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,11 +33,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 
+import io.tileverse.geoserver.parquetry.migration.CommunityGeoParquetMigration;
 import io.tileverse.geoserver.parquetry.web.GeoParquetDataStoreEditPanel;
 import io.tileverse.geoserver.parquetry.web.IcebergDataStoreEditPanel;
 import io.tileverse.geoserver.parquetry.web.StacDataStoreEditPanel;
 import io.tileverse.geoserver.parquetry.wfs.ArrowIpcOutputFormat;
 import io.tileverse.geoserver.parquetry.wfs.GeoParquetOutputFormat;
+import io.tileverse.geoserver.web.storage.migration.StoreMigrationPage;
 
 import io.tileverse.parquetry.geotools.iceberg.IcebergDataStoreFactory;
 import io.tileverse.parquetry.geotools.parquet.GeoParquetDataStoreFactory;
@@ -148,6 +152,16 @@ class PluginContextTest {
         handler.onReset();
 
         assertThat(cache.getIfPresent("key")).isNull();
+    }
+
+    @Test
+    void declaresTheMigration() {
+        Map<String, ToolLinkInfo> links = context.getBeansOfType(ToolLinkInfo.class);
+
+        assertThat(context.getBean("communityGeoParquetMigration")).isInstanceOf(CommunityGeoParquetMigration.class);
+        assertThat(links).containsOnlyKeys("storeMigrationToolLink");
+        ToolLinkInfo link = links.get("storeMigrationToolLink");
+        assertThat(link.getComponentClass()).isEqualTo(StoreMigrationPage.class);
     }
 
     @Test
