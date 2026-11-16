@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<html xmlns:wicket="http://wicket.apache.org/">
+  <body>
+    <wicket:panel>
+      <div class="gs-panel-MigrationDetailsPanel">
+        <div wicket:id="beforeSection">
+          <h3><wicket:message key="MigrationDetailsPanel.before">Before</wicket:message></h3>
+          <table>
+            <tbody>
+              <tr wicket:id="parameters"><th wicket:id="key"></th><td wicket:id="value"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div wicket:id="afterSection">
+          <h3><wicket:message key="MigrationDetailsPanel.after">After</wicket:message></h3>
+          <table>
+            <tbody>
+              <tr wicket:id="parameters"><th wicket:id="key"></th><td wicket:id="value"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div wicket:id="notesSection">
+          <h3><wicket:message key="MigrationDetailsPanel.notes">Findings</wicket:message></h3>
+          <ul class="feedbackPanel"><li wicket:id="notes"><span wicket:id="text"></span></li></ul>
+        </div>
+        <div wicket:id="layersSection">
+          <h3><wicket:message key="MigrationDetailsPanel.layers">Layers</wicket:message></h3>
+          <table>
+            <thead>
+              <tr>
+                <th><wicket:message key="MigrationDetailsPanel.layer">Layer</wicket:message></th>
+                <th><wicket:message key="MigrationDetailsPanel.before">Before</wicket:message></th>
+                <th><wicket:message key="MigrationDetailsPanel.after">After</wicket:message></th>
+              </tr>
+            </thead>
+            <tbody>
+              <wicket:container wicket:id="layers">
+                <tr><td wicket:id="layer"></td><td wicket:id="nativeBefore"></td><td wicket:id="nativeAfter"></td></tr>
+                <tr wicket:id="layerNotesRow">
+                  <td colspan="3"><ul class="feedbackPanel"><li wicket:id="layerNotes"><span wicket:id="text"></span></li></ul></td>
+                </tr>
+              </wicket:container>
+            </tbody>
+          </table>
+        </div>
+        <div wicket:id="failureSection">
+          <h3><wicket:message key="MigrationDetailsPanel.failure">Failure</wicket:message></h3>
+          <ul class="feedbackPanel"><li class="feedbackPanelERROR"><span wicket:id="failure"></span></li></ul>
+        </div>
+      </div>
+    </wicket:panel>
+  </body>
+</html>

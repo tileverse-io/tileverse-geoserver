@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<html xmlns:wicket="http://wicket.apache.org/">
+  <body>
+    <wicket:panel>
+      <div class="gs-panel-StoreMigrationPanel">
+        <div class="gs-unordered-list-class action-group">
+          <div class="gs-list-item-class"><a class="button outline-primary" href="#" wicket:id="check"><wicket:message key="StoreMigrationPanel.check">Check</wicket:message></a></div>
+          <div class="gs-list-item-class"><a class="button outline-primary" href="#" wicket:id="migrate"><wicket:message key="StoreMigrationPanel.migrate">Migrate</wicket:message></a></div>
+          <div class="gs-list-item-class"><a class="button outline-primary" href="#" wicket:id="revert"><wicket:message key="StoreMigrationPanel.revert">Revert</wicket:message></a></div>
+          <div class="gs-list-item-class"><a class="button outline-danger" href="#" wicket:id="discard"><wicket:message key="StoreMigrationPanel.discard">Discard backup</wicket:message></a></div>
+        </div>
+        <div wicket:id="table"></div>
+        <p wicket:id="empty"></p>
+        <div wicket:id="details"></div>
+        <div wicket:id="dialog"></div>
+      </div>
+
+      <wicket:fragment wicket:id="statusCell">
+        <a href="#" wicket:id="status"><span wicket:id="label"></span></a>
+      </wicket:fragment>
+
+      <wicket:fragment wicket:id="confirmation">
+        <div class="p-1">
+          <p wicket:id="question"></p>
+          <div class="button-group float-end">
+            <a href="#" class="button primary" wicket:id="confirm"></a>
+            <a href="#" class="button outline-danger" wicket:id="cancel"><wicket:message key="cancel">Cancel</wicket:message></a>
+          </div>
+        </div>
+      </wicket:fragment>
+    </wicket:panel>
+  </body>
+</html>
