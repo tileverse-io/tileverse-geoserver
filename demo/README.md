@@ -29,6 +29,20 @@ Each appears in two workspaces, plus a `world` layer group ("World Map") in each
   `naturalearth` (a bind mount, no upload). This mirrors a real deployment reading from S3 with an
   instance role or environment credentials.
 
+A third workspace holds stores of GeoServer's community GeoParquet module, to try the store
+migration page of the parquetry plugin (Tools, entry "Store migration"):
+
+- **`geoparquet-community`** - the same Natural Earth files, read by the community module through
+  DuckDB:
+  - the `ne` store reads the local directory and publishes `countries` and `populated_places`;
+  - the `ne-s3` store reads the bucket `naturalearth` on s3proxy with the AWS default credential
+    chain, and publishes `coastlines` and `boundary_lines_land`. Its `uri` ends in
+    `?s3_use_ssl=false` because s3proxy speaks plain HTTP. The community module appends that
+    query string to the names of its feature types, such as `coastlines.parquet_s3_use_ssl_false`.
+
+  DuckDB downloads its extensions on the first request to one of these stores, and needs internet
+  access for it.
+
 ## Prerequisites
 
 - Docker (with Compose)
@@ -97,9 +111,11 @@ more per plugin:
 make demo-smoke
 ```
 
-`core.sh` covers REST, WFS counts and WMS rendering in both workspaces. `geoparquet.sh` and
-`arrow-ipc.sh` download the countries layer in each output format and read it back with DuckDB,
-which they expect on `PATH`. Run one on its own, or point any of them at another instance:
+`core.sh` covers REST, WFS counts and WMS rendering in both workspaces.
+`geoparquet-community.sh` counts the features of the four layers of the community GeoParquet
+module. `geoparquet.sh` and `arrow-ipc.sh` download the countries layer in each output format and
+read it back with DuckDB, which they expect on `PATH`. Run one on its own, or point any of them at
+another instance:
 
 ```bash
 demo/smoke/arrow-ipc.sh
@@ -122,6 +138,10 @@ own data, drop GeoParquet files in `data/ne/` and adjust the `ne` datastore unde
 - The `Dockerfile` downloads the official GeoServer 3.0 platform-independent binary, drops the old
   bundled Marlin renderer (incompatible with JDK 24+), unzips the plugins into `WEB-INF/lib`, and
   bakes in the preconfigured workspaces and their sample data.
+- It also installs GeoServer's community GeoParquet module (`geoparquet`) from the GeoServer
+  series nightly build, as community modules have no releases. The layers of the
+  `geoparquet-community` workspace need it. Build with
+  `--build-arg COMMUNITY_GEOPARQUET_MODULES=` to leave it out.
 - GeoServer runs on Java 25 with the runtime options proven by GeoServer Cloud
   (`--enable-preview`, the required `--add-opens`, and the Apple-M4/Docker SVE workaround).
 - GeoServer regenerates the rest of its data directory (services, default styles, security) on

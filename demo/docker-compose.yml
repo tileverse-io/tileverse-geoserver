@@ -10,6 +10,8 @@
 #   iceberg-s3       - the same Iceberg warehouse over S3, via s3proxy (bucket "warehouse")
 #   stac-json        - a static STAC catalog (JSON) on nginx; its GeoParquet assets on s3proxy
 #   stac-geoparquet  - a STAC items table (GeoParquet) and its assets, both on s3proxy
+#   geoparquet-community - the GeoParquet files from local disk and s3proxy, through GeoServer's
+#                      community GeoParquet module, to try the store migration page
 #
 # A future iceberg-rest workspace would pair with a catalog service here (an Iceberg REST
 # catalog reading the same warehouse through a running catalog endpoint).
