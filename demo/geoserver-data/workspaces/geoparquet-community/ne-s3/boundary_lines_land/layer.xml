@@ -1,0 +1,16 @@
+<layer>
+  <name>boundary_lines_land</name>
+  <id>LayerInfoImpl-2facb56e:1a1ebed45eb:-7fd9</id>
+  <type>VECTOR</type>
+  <defaultStyle>
+    <id>StyleInfoImpl--1b718b8f:19f311dfce5:-7fff</id>
+  </defaultStyle>
+  <resource class="featureType">
+    <id>FeatureTypeInfoImpl-2facb56e:1a1ebed45eb:-7fda</id>
+  </resource>
+  <attribution>
+    <logoWidth>0</logoWidth>
+    <logoHeight>0</logoHeight>
+  </attribution>
+  <dateCreated>2026-11-17 23:56:02.556 UTC</dateCreated>
+</layer>
