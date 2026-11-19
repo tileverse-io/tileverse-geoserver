@@ -1,0 +1,25 @@
+<dataStore>
+  <id>DataStoreInfoImpl-2facb56e:1a1ebed45eb:-7fe1</id>
+  <name>ne-s3</name>
+  <description>GeoParquet over S3 (the s3proxy endpoint), read by the community module through DuckDB.</description>
+  <type>GeoParquet</type>
+  <enabled>true</enabled>
+  <workspace>
+    <id>WorkspaceInfoImpl-2facb56e:1a1ebed45eb:-7fe8</id>
+  </workspace>
+  <connectionParameters>
+    <entry key="endpoint">s3proxy:80</entry>
+    <entry key="fetch size">1000</entry>
+    <entry key="screenmap">true</entry>
+    <entry key="aws_region">us-east-1</entry>
+    <entry key="url_style">path</entry>
+    <entry key="dbtype">geoparquet</entry>
+    <entry key="namespace">http://geoparquet-community</entry>
+    <entry key="use_aws_credential_chain">true</entry>
+    <entry key="uri">s3://naturalearth/*.parquet?s3_use_ssl=false</entry>
+  </connectionParameters>
+  <__default>false</__default>
+  <dateCreated>2026-11-17 23:53:00.790 UTC</dateCreated>
+  <dateModified>2026-11-17 23:53:40.148 UTC</dateModified>
+  <disableOnConnFailure>false</disableOnConnFailure>
+</dataStore>

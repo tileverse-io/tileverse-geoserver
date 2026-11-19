@@ -68,6 +68,45 @@ RUN set -e; \
     done; \
     rm -rf /tmp/plugins
 
+# GeoServer's community GeoParquet module, used by the stores of the geoparquet-community
+# workspace. It reads through DuckDB, and DuckDB downloads its extensions on the first request to
+# one of these stores. The store migration page moves the stores to the parquetry plugin.
+# GeoServer releases no community modules; this is the nightly of the GeoServer series. Build with
+# --build-arg COMMUNITY_GEOPARQUET_MODULES= to leave the module out. A nightly zip may bundle
+# newer copies of libraries already shipped with the webapp. Only the jars missing from the
+# webapp are copied, keeping each library at one version.
+#
+# The zip names include the snapshot version of the series branch, and that version changes at
+# each release: 3.0.3-SNAPSHOT after 3.0.2. The build reads the current names from the listing of
+# the nightly directory.
+ARG COMMUNITY_NIGHTLY_URL=https://build.geoserver.org/geoserver/3.0.x/community-latest
+ARG COMMUNITY_GEOPARQUET_MODULES="geoparquet"
+RUN set -e; \
+    modules="$COMMUNITY_GEOPARQUET_MODULES"; \
+    if [ -n "$(echo $modules)" ]; then \
+      listing=$(curl -fsSL --retry 4 --retry-delay 5 --retry-all-errors "$COMMUNITY_NIGHTLY_URL/"); \
+    fi; \
+    for module in $modules; do \
+      zip=$(printf '%s\n' "$listing" | grep -o "geoserver-[0-9.]*-SNAPSHOT-$module-plugin\.zip" | head -n 1); \
+      if [ -z "$zip" ]; then \
+        echo "no $module zip in $COMMUNITY_NIGHTLY_URL" >&2; \
+        exit 1; \
+      fi; \
+      curl -fSL --retry 4 --retry-delay 5 --retry-all-errors -o /tmp/$module.zip \
+        "$COMMUNITY_NIGHTLY_URL/$zip"; \
+      mkdir /tmp/$module; \
+      unzip -q /tmp/$module.zip -d /tmp/$module; \
+      for jar in /tmp/$module/*.jar; do \
+        base=$(basename "$jar" | sed -E 's/-[0-9]+(\.[0-9A-Za-z-]+)*\.jar$//'); \
+        if ls /opt/geoserver/webapps/geoserver/WEB-INF/lib/"$base"-[0-9]*.jar >/dev/null 2>&1; then \
+          echo "$module: keeping the webapp's own $base"; \
+        else \
+          cp "$jar" /opt/geoserver/webapps/geoserver/WEB-INF/lib/; \
+        fi; \
+      done; \
+      rm -rf /tmp/$module /tmp/$module.zip; \
+    done
+
 # Bake the preconfigured data directory (workspaces + stores + published layers) and the sample
 # datasets. The container then serves live layers on first boot with no manual steps.
 COPY geoserver-data /opt/geoserver/data_dir

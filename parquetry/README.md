@@ -11,9 +11,12 @@ custom store-edit panel. The `applicationContext.xml` here declares:
 - a `DataStorePanelInfo` binding `GeoParquetDataStoreFactory` to the custom
   `GeoParquetDataStoreEditPanel` (see below),
 - a `ModuleStatusImpl` per feature: each store type and each WFS output format
-  reports its own row under About > Server Status > Modules, and
+  reports its own row under About > Server Status > Modules,
 - a `GeoServerLifecycleHandler` clearing the caches of parquetry (footers,
-  learned page indexes, byte ranges) when GeoServer resets or reloads.
+  learned page indexes, byte ranges) when GeoServer resets or reloads, and
+- a `GeoParquetMigrationConfiguration` adding the store migration page to the
+  Tools menu, with the migration of the community GeoParquet stores (see
+  [Migrating from the community GeoParquet store](#migrating-from-the-community-geoparquet-store)).
 
 ## Cloud storage panel
 
@@ -55,6 +58,174 @@ file or a folder, Iceberg a table or warehouse folder, and STAC a catalog
 document or an items table. Local files follow GeoServer's file sandbox and
 `GEOSERVER_FILEBROWSER_HIDEFS`, as GeoServer's own file chooser does, and a
 local choice is written as an absolute `file:` URI.
+
+## Migrating from the community GeoParquet store
+
+The GeoServer community GeoParquet module reads GeoParquet files through
+DuckDB. The plugin can move the stores of that module to the Parquetry store,
+in place. A migrated store keeps its id, its layers and their styles. The
+migration rewrites its type and connection parameters, and keeps a backup of
+the original definition. A migration needs no restart. From then on, the store
+opens in the Parquetry store page.
+
+Administrators find the page under Tools, entry "Store migration". Its title
+is "Migrate community stores". The table lists the stores of the community
+module, and the migrated stores with a backup. The status of a store links to
+its details. For a checked store, the details show the parameters before and
+after, the findings of the last check, and the native names of the layers
+before and after. For a migrated store, they show its current parameters. The
+details mask secrets as `********`.
+
+The buttons act on the selected stores:
+
+- **Check** translates the parameters of a store, opens the result as a
+  Parquetry store without saving it, and compares its layers with the
+  published ones. A check ends "Ready", "Ready with differences" or
+  "Blocked", or "Failed" when it cannot run.
+- **Migrate** acts on the stores checked as "Ready" or "Ready with
+  differences", and asks for confirmation when a store has differences. It
+  checks the store again before writing it. If the new check is worse than
+  the one shown, or finds a difference missing from the one shown, the store
+  stays as it is and the page shows the new check.
+- **Revert** restores the original definition of a migrated store and removes
+  its backup. Edits made to the store after the migration are lost. The
+  reverted store needs the community module again.
+- **Discard backup** removes the backup and makes the migration final. The
+  store leaves the list.
+
+Checks, migrations and reverts run in the background. The page refreshes until
+they end.
+
+The backup of the original store is kept in the metadata of the store. It
+holds the original `uri` with its secrets. GeoServer encrypts the backup with
+the password encryption configured for store passwords. When that encryption
+is off, the backup is stored in plain text, like the store passwords.
+
+When a migration or a revert fails, the status of the store says so, and its
+details show the error. The GeoServer log has a warning naming the store.
+
+### Translated parameters
+
+The community store takes its S3 settings from the query string of its `uri`
+and from its own parameters. The Parquetry store takes them as `storage.s3.*`
+parameters:
+
+| Community store                                                | Parquetry store                            |
+|----------------------------------------------------------------|--------------------------------------------|
+| `uri`, without its query string                                | `geoparquet`                               |
+| `region` or `s3_region` in the URI, else `aws_region`          | `storage.s3.region`                        |
+| `access_key` or `s3_access_key_id` in the URI                  | `storage.s3.aws-access-key-id`             |
+| `secret_key` or `s3_secret_access_key` in the URI              | `storage.s3.aws-secret-access-key`         |
+| `endpoint` or `s3_endpoint` in the URI, else `endpoint`        | `storage.s3.endpoint`                      |
+| `url_style` or `s3_url_style` in the URI, else `url_style`     | `storage.s3.force-path-style` when `path`  |
+| `s3_use_ssl` in the URI                                        | the scheme of `storage.s3.endpoint`        |
+| `aws_profile`                                                  | `storage.s3.default-credentials-profile`   |
+| `namespace`                                                    | `namespace`                                |
+| `primary_key_id`                                               | `fid`                                      |
+
+A setting in the URI wins over the store parameter of the same meaning. An
+endpoint without a scheme gets `http://` in front when `s3_use_ssl` is
+`false` in the URI, and `https://` otherwise, with a note. An endpoint with
+a scheme stays as written. DuckDB reads
+an `s3://` location anonymously when the URI has no access key and
+`use_aws_credential_chain` is off. The migrated store does the same: the
+migration sets `storage.s3.anonymous` to `true`, with a note.
+
+The S3 secret key moves from the URI into
+`storage.s3.aws-secret-access-key`, a password parameter. GeoServer encrypts
+it like the other store passwords.
+
+The Parquetry store has no counterpart for the DuckDB memory limit
+(`memory_limit`) and thread count (`threads`), `fetch size` and
+`screenmap`. The migration leaves them out, together with other parameters
+unknown to it, and lists them in one note.
+
+Two settings in the URI block the migration:
+
+- a setting in the URI query unknown to the migration, such as a misspelled
+  key;
+- a session token in the URI (`session_token` or `s3_session_token`). The
+  migration does not translate session tokens.
+
+A store without a `uri` is blocked too.
+
+### Layers
+
+A `uri` naming a single `.parquet` file gives one layer. For a folder or a
+glob, the check tries the layer groupings offered by the installed Parquetry,
+in this order. It keeps the first grouping with a layer for each published
+layer:
+
+1. `file`: one layer per top-level `.parquet` file;
+2. `partition`: one layer per Hive partition, down to the `max_hive_depth`
+   of the community store when it has one;
+3. `merged`: the files of the folder as one layer.
+
+The community store reads a Hive tree through a recursive glob, such as
+`<root>/**/*.parquet`. The check tries the `uri` as written first. When it
+has a `**` segment, the check then tries the folder above the first glob
+segment, `<root>/`, with the same groupings. Parquetry 1.0-RC6 finds no
+files through a recursive glob, and can read the folder instead. When the
+folder wins, the migrated store reads the folder, with a note.
+
+Parquetry 1.0-RC6 offers `file` and `merged` only. A store publishing a
+layer per Hive partition is blocked, with the note "Layers per Hive partition
+need a newer Parquetry". A Hive tree read with `max_hive_depth` set to 0 is
+one layer, and migrates as the `merged` layer of its folder.
+
+A check is also blocked when the translated store cannot be opened, or when a
+published layer has no counterpart in it.
+
+A layer keeps its name, its id and its styles. Its native name changes when
+Parquetry names the file differently from the community store. For example,
+the community store publishes `my-points.parquet` as `my_points`, and
+Parquetry as `my-points`.
+
+The community store appends the query string of its `uri` to the layer
+names. With the `uri` `s3://naturalearth/*.parquet?s3_use_ssl=false`, it
+publishes `countries.parquet` as `countries.parquet_s3_use_ssl_false`, and
+Parquetry as `countries`. The check matches such a layer to the layer of its
+file, and the migration renames its native name.
+
+### Checks without the community module
+
+With the community module installed, the check reads the attributes of the
+layers from the community store. Without it, the check compares the attributes
+saved in the catalog. An attribute saved without a type is compared by name
+only. When a layer has no saved attributes, the check ends "Ready with
+differences", with the note "Attributes not compared: the community module is
+not installed". With or without the module, the check compares the CRS found
+by Parquetry with the native CRS saved with the layer.
+
+### What changes for clients
+
+A migrated layer serves the same features, with these differences. Because
+the feature ids change, a check of a store with published layers ends "Ready
+with differences" at best.
+
+- Geometry attributes are described as `Geometry` instead of their specific
+  type, such as `Point`.
+- The `id` column of a file becomes a visible attribute. The community store
+  hid it as its key.
+- Covering columns such as `bbox` hold the bounding box of each geometry.
+  Parquetry reads them to filter rows and does not publish them. A layer
+  with saved attributes reading one cannot migrate until that attribute is
+  removed.
+- Struct columns read as maps.
+- Timestamps and some integer columns change their Java type.
+- Feature ids change. The community store prefixes them with the layer name,
+  as in `points.1`, and Parquetry does not, as in `1`. A request by a
+  feature id served before does not find its feature. For a file without an
+  id column and without a feature id column, such a request fails.
+- With a narrow glob and one layer per file, such as `<dir>/points_*.parquet`,
+  the Parquetry store exposes each file of the folder. The layers not
+  published before stay unpublished.
+
+An administrator may customize the attributes of a layer. GeoServer then
+saves the attribute list with the layer, and reads each attribute from the
+store. The check blocks such a layer when Parquetry lacks one of its
+attributes, or a property read by the source expression of one. Otherwise the
+layer would stop serving after the migration.
 
 ## WFS output formats
 

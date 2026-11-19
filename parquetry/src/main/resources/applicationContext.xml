@@ -33,4 +33,5 @@
   <bean class="io.tileverse.geoserver.parquetry.config.GeoParquetWfsOutputFormatConfiguration"/>
   <bean class="io.tileverse.geoserver.parquetry.config.ArrowIpcWfsOutputFormatConfiguration"/>
   <bean class="io.tileverse.geoserver.parquetry.config.ParquetryCachesConfiguration"/>
+  <bean class="io.tileverse.geoserver.parquetry.config.GeoParquetMigrationConfiguration"/>
 </beans>

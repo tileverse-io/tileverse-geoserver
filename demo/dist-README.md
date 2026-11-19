@@ -25,7 +25,9 @@ removes it, and the next `up` starts again from the configuration baked into the
 
 ## What you get
 
-Six workspaces, each reading Natural Earth through the parquetry plugin from a different source:
+Six workspaces, each reading Natural Earth through the parquetry plugin from a different source,
+and a seventh with stores of GeoServer's community GeoParquet module, to try the store migration
+page:
 
 | workspace | reads from | shows off |
 |---|---|---|
@@ -35,6 +37,7 @@ Six workspaces, each reading Natural Earth through the parquetry plugin from a d
 | `iceberg-s3` | the same warehouse over S3 (bundled s3proxy) | an Iceberg warehouse on cloud object storage |
 | `stac-json` | a static STAC catalog (JSON) over HTTP, assets on S3 | a public catalog with data on a credentialed object store |
 | `stac-geoparquet` | a STAC items table (GeoParquet) on S3, assets on S3 | an item-table catalog colocated with its data |
+| `geoparquet-community` | the same GeoParquet files, local and over S3, through GeoServer's community GeoParquet module | migrating community stores to the parquetry plugin |
 
 ### GeoParquet layers (`parquetry`, `parquetry-s3`)
 
@@ -87,6 +90,20 @@ reachable with one set: a public HTTP catalog plus private object-store data (`s
 item-table catalog colocated with the data on the object store (`stac-geoparquet`). A catalog on
 one authenticated backend plus data on a different authenticated backend (two distinct credential
 sets) is not supported.
+
+### Community GeoParquet layers (`geoparquet-community`)
+
+Two stores of GeoServer's community GeoParquet module, which reads through DuckDB:
+
+| store | reads | layers |
+|---|---|---|
+| `ne` | the local directory of GeoParquet files | `countries`, `populated_places` |
+| `ne-s3` | the bucket `naturalearth` on the bundled s3proxy, with the AWS default credential chain | `coastlines`, `boundary_lines_land` |
+
+The parquetry plugin migrates such stores in place: open Tools, entry "Store migration", check the
+two stores, and migrate them. The layers keep their names and styles, and **Revert** restores the
+community stores. DuckDB downloads its extensions on the first request to one of these stores,
+and needs internet access for it.
 
 ### Reading from S3 the way you would in production
 
